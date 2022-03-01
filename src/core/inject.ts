@@ -1,7 +1,8 @@
 import { inject } from "inversify";
 import "reflect-metadata";
+import { INJECTABLE_KEY } from "./constant";
 
-export default function Inject<T extends { new (...args: any[]): any }>(
+export function Inject<T extends { new (...args: any[]): any }>(
   InjectableClass: T
 ) {
   return function (
@@ -10,8 +11,10 @@ export default function Inject<T extends { new (...args: any[]): any }>(
     indexOrPropertyDescriptor: number | PropertyDescriptor
   ) {
     return inject(
-      ((InjectableClass as any) as { new (...args: any[]): any; $KEY: symbol })
-        .$KEY
+      ((InjectableClass as any) as {
+        new (...args: any[]): any;
+        [INJECTABLE_KEY]: symbol;
+      })[INJECTABLE_KEY]
     )(target, targetKey, indexOrPropertyDescriptor);
   };
 }

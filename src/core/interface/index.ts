@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply, FastifyInstance } from "fastify";
 import { Constructor, ExactlyOrWithPromise } from "../../types";
-export type IMetaDataKey = "$METADATA";
-export type InjectableKey = "$KEY";
+export type IMETADATA_KEY = "$METADATA";
+export type INJECTABLE_KEY = "$KEY";
 
 export type IMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS";
 

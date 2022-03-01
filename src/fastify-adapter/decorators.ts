@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import metaDecorator from "../core/metaDecorateor";
+import { metaDecorator } from "../core/metaDecorator";
 import { IController } from "../core/interface";
 import { ReqRepLifeCycle } from "./interface";
 

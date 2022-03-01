@@ -1,4 +1,4 @@
-import { IMetaDataKey, InjectableKey } from "../interface";
+import { INJECTABLE_KEY as IINJECTABLE_KEY, IMETADATA_KEY } from "../interface";
 
-const metaDataKey: IMetaDataKey = "$METADATA";
-const injectableKey: InjectableKey = "$KEY";
+export const METADATA_KEY: IMETADATA_KEY = "$METADATA";
+export const INJECTABLE_KEY: IINJECTABLE_KEY = "$KEY";

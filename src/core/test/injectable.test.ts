@@ -1,13 +1,12 @@
-import Injectable from "../injectable";
+import { Injectable } from "../injectable";
 import * as inversify from "inversify";
-
-// jest.mock("inversify");
+import { INJECTABLE_KEY } from "../constant";
 
 describe(`test for Injectable`, () => {
   let spyInjectable: jest.SpyInstance;
   let DecoratedMClass: {
     new (...args: any[]): any;
-    $KEY: symbol;
+    [INJECTABLE_KEY]: symbol;
   };
   class MClass {}
 
@@ -42,7 +41,7 @@ describe(`test for Injectable`, () => {
       expect(mockInjectableReturn.mock.calls[0][0]).toBe(MClass);
     });
 
-    test(`should return function second call be without correct argument`, () => {
+    test(`should return function second call be with a subclass of 'MClass'`, () => {
       expect(mockInjectableReturn.mock.calls[1]).toHaveLength(1);
       expect(mockInjectableReturn.mock.calls[1][0].prototype).toBeInstanceOf(
         MClass
@@ -52,11 +51,11 @@ describe(`test for Injectable`, () => {
 
   describe("test to check the static prop $KEY", () => {
     test("should be defined", () => {
-      expect(DecoratedMClass.$KEY).toBeDefined();
+      expect(DecoratedMClass[INJECTABLE_KEY]).toBeDefined();
     });
 
     test(`should be of type 'symbol'`, () => {
-      expect(typeof DecoratedMClass.$KEY).toBe("symbol");
+      expect(typeof DecoratedMClass[INJECTABLE_KEY]).toBe("symbol");
     });
   });
 });

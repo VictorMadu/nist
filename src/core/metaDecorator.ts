@@ -1,6 +1,6 @@
 import { IController, IHandlerMetaData } from "./interface";
 
-export default function metaDecorator(
+export function metaDecorator(
   metaKey: string | symbol,
   fn: (metaData: IHandlerMetaData) => void
 ) {

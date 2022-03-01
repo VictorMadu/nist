@@ -1,5 +1,5 @@
-import Injectable from "../injectable";
-import Inject from "../inject";
+import { Injectable } from "../injectable";
+import { Inject } from "../inject";
 import * as inversify from "inversify";
 
 describe(`test for inject`, () => {
