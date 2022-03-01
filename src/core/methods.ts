@@ -1,34 +1,35 @@
 import { IController, IMethod } from "./interface";
+import { metaDecorator } from "./metaDecorator";
 
-export function Get(path: string) {
+export function Get(path: string | undefined) {
   return Method("GET", path);
 }
 
-export function Post(path: string) {
+export function Post(path: string | undefined) {
   return Method("POST", path);
 }
 
-export function Put(path: string) {
+export function Put(path: string | undefined) {
   return Method("PUT", path);
 }
 
-export function Patch(path: string) {
+export function Patch(path: string | undefined) {
   return Method("PATCH", path);
 }
 
-export function Delete(path: string) {
+export function Delete(path: string | undefined) {
   return Method("DELETE", path);
 }
 
-function Method(method: IMethod, path: string) {
+function Method(method: IMethod, path = "") {
   return function (
-    target: IController,
+    target: Record<string | symbol, any>,
     key: string,
     descriptor: PropertyDescriptor
   ) {
     const metaData = target[key]["$METADATA"] ?? {};
-    metaData.method = method;
-    metaData.url = path;
     target[key]["$METADATA"] = metaData;
+    metaDecorator("method", method)(target, key, descriptor);
+    metaDecorator("url", path)(target, key, descriptor);
   };
 }
