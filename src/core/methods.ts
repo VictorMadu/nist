@@ -1,23 +1,23 @@
 import { IController, IMethod } from "./interface";
 import { metaDecorator } from "./metaDecorator";
 
-export function Get(path: string | undefined) {
+export function Get(path?: string) {
   return Method("GET", path);
 }
 
-export function Post(path: string | undefined) {
+export function Post(path?: string) {
   return Method("POST", path);
 }
 
-export function Put(path: string | undefined) {
+export function Put(path?: string) {
   return Method("PUT", path);
 }
 
-export function Patch(path: string | undefined) {
+export function Patch(path?: string) {
   return Method("PATCH", path);
 }
 
-export function Delete(path: string | undefined) {
+export function Delete(path?: string) {
   return Method("DELETE", path);
 }
 
