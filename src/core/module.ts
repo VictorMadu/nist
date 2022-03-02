@@ -1,8 +1,8 @@
 import { FastifyInstance } from "fastify";
 import { Container } from "inversify";
 import _ from "lodash";
-import { ConstructorReturnType, Constructor } from "src/types";
-import { getAllClassMethodsName, throwError } from "src/utils";
+import { ConstructorReturnType, Constructor } from "../types";
+import { getAllClassMethodsName, throwError } from "../utils";
 import {
   IControllerDecoConstructor,
   IServiceDecoConstructor,
@@ -10,6 +10,8 @@ import {
   IController,
   IHandlerMetaData,
   IService,
+  IControllerAdapter,
+  IServiceAdapter,
 } from "./interface";
 
 interface IListeners {
@@ -19,27 +21,24 @@ interface IListeners {
 }
 
 export type IConfig = {
-  imports: ReturnType<ReturnType<typeof Module>>[];
+  imports: ModuleClassManager[];
   controllers: IControllerDecoConstructor[];
   services: IServiceDecoConstructor[];
   exports: IServiceDecoConstructor[];
 };
 
-interface IServiceAdapter {
-  attachLifeCycleListener: (service: IService) => void;
-}
-
-interface IControllerAdapter {
-  attachToRoute: (routeConfig: {}, baseConfig: { basePath: string }) => void;
-}
+export type IModuleClass = {
+  new (
+    serviceAdapter: IServiceAdapter,
+    controllerAdapter: IControllerAdapter
+  ): { load: () => Container };
+};
 
 export function Module(config: IConfig) {
-  return function (
-    Target: IControllerDecoConstructor | IServiceDecoConstructor
-  ): any {
-    return class Decorated extends Target {
+  return function (Target: { new (...args: any[]): any }): ModuleClassManager {
+    class Decorated extends Target {
       private localContainer: Container;
-      private static exportContainer: Container;
+      private exportContainer: Container;
       private controllerContainer: Container;
 
       constructor(
@@ -48,98 +47,59 @@ export function Module(config: IConfig) {
       ) {
         super();
         this.localContainer = this.createContainer();
-        Decorated.exportContainer = this.createContainer();
+        this.exportContainer = this.createContainer();
         this.controllerContainer = this.createContainer();
-        this.loadAction();
       }
 
-      // PUBLIC: The only public method
-      static load(
-        serviceAdapter: IServiceAdapter,
-        controllerAdapter: IControllerAdapter
-      ) {
-        // if not localContainer or exportContainer or controllerContainer
-        if (!Decorated.exportContainer)
-          new Decorated(serviceAdapter, controllerAdapter);
-        return Decorated.exportContainer;
-      }
-
-      private loadAction() {
+      load() {
         const importContainers = this.getImportContainers();
         this.bindInjectables(
           [this.getAllLocalServices(), this.localContainer],
-          [config.exports, Decorated.exportContainer],
+          [config.exports, this.exportContainer],
           [config.controllers, this.controllerContainer]
         );
         const mergedContainers = this.getMergedContainers(importContainers);
         this.loadServices(mergedContainers);
         this.loadControllers(mergedContainers);
+
+        return this.exportContainer;
       }
 
       private getMergedContainers(importContainers: Container[]) {
         return Container.merge(
           this.localContainer,
-          Decorated.exportContainer,
+          this.exportContainer,
           this.controllerContainer,
           ...importContainers
         ) as Container;
       }
 
       private getImportContainers(): Container[] {
-        return _.map(config.imports, (importModules) =>
-          importModules.load(this.serviceAdapter, this.controllerAdapter)
+        return _.map(config.imports, (importModule) =>
+          getExportContainer(importModule)(
+            this.serviceAdapter,
+            this.controllerAdapter
+          )
         );
       }
 
       private loadControllers(container: Container) {
-        const resolvedControllers = _.map(config.controllers, (controller) =>
-          this.getInstanceFromContainer(container, controller)
+        const controllerLoader = new ControllerLoader(
+          container,
+          this.controllerAdapter
         );
 
-        return _.map(resolvedControllers, (controller) => {
-          const controllerMethodsName = getAllClassMethodsName(
-            controller.constructor
-          );
-          return _.forEach(controllerMethodsName, (methodName) => {
-            if (methodName === "$METADATA")
-              return throwError(
-                `methodName of controller ${controller} should not be used since it is a resevered key`
-              );
-
-            const handlerWithMetaData = controller[methodName];
-            this.controllerAdapter.attachToRoute(
-              {
-                ...handlerWithMetaData.$METADATA,
-                handler: this.getControllerHandlerFn(handlerWithMetaData),
-              },
-              { basePath: controller.$METADATA.basePath }
-            );
-            return;
-          });
-        });
+        _.forEach(config.controllers, (controller) =>
+          controllerLoader.load(controller)
+        );
       }
 
       private loadServices(container: Container) {
-        return _.map(config.services, (service) => {
-          const serviceInstance = this.getInstanceFromContainer(
-            container,
-            service
-          );
-          this.serviceAdapter.attachLifeCycleListener(serviceInstance);
-        });
-      }
+        const serviceLoader = new ServiceLoader(container, this.serviceAdapter);
 
-      private getInstanceFromContainer<T extends IClassWithKey<Constructor>>(
-        container: Container,
-        Class: T
-      ) {
-        return container.get<ConstructorReturnType<T>>(Class.$KEY);
-      }
-
-      private getControllerHandlerFn(handlerWithMetaData: IController[string]) {
-        const handlerFn = handlerWithMetaData;
-        (handlerFn.$METADATA as IHandlerMetaData | undefined) = undefined;
-        return handlerFn;
+        return _.forEach(config.services, (service) =>
+          serviceLoader.load(service)
+        );
       }
 
       private bindInjectables(
@@ -164,6 +124,107 @@ export function Module(config: IConfig) {
       private createContainer() {
         return new Container({ defaultScope: "Singleton" });
       }
-    };
+    }
+
+    return new ModuleClassManager(Decorated);
   };
+}
+
+export const getExportContainer = (moduleManager: ModuleClassManager) => (
+  serviceAdapter: IServiceAdapter,
+  controllerAdapter: IControllerAdapter
+) => {
+  if (moduleManager.getExportContainer()) {
+    const moduleInstance = moduleManager.createModuleInstance(
+      serviceAdapter,
+      controllerAdapter
+    );
+    moduleManager.setExportContainer(moduleInstance.load());
+  }
+  return moduleManager.getExportContainer() as Container;
+};
+
+export class ServiceLoader<
+  T extends IServiceDecoConstructor = IServiceDecoConstructor
+> {
+  constructor(
+    private container: Container,
+    private serviceAdapter: IServiceAdapter
+  ) {}
+  load(service: T) {
+    const serviceInstance = this.container.get<ConstructorReturnType<T>>(
+      service
+    );
+    this.serviceAdapter.attachLifeCycleListener(serviceInstance);
+  }
+}
+
+export class ControllerLoader<
+  T extends IControllerDecoConstructor = IControllerDecoConstructor
+> {
+  constructor(
+    private container: Container,
+    private controllerAdapter: IControllerAdapter
+  ) {}
+
+  load(controller: T) {
+    const controllerInstance = this.container.get<ConstructorReturnType<T>>(
+      controller
+    );
+    const controllerMethodsName = getAllClassMethodsName(
+      controllerInstance.constructor
+    );
+
+    _.forEach(controllerMethodsName, (methodName) =>
+      this.attachToRoute(controllerInstance, methodName)
+    );
+  }
+
+  private attachToRoute(
+    controllerInstance: ConstructorReturnType<T>,
+    methodName: string
+  ) {
+    if (methodName === "$METADATA")
+      return throwError(
+        `methodName of controller ${controllerInstance} should not be used since it is a resevered key`
+      );
+
+    const handlerWithMetaData = controllerInstance[
+      methodName
+    ] as ConstructorReturnType<T>[string];
+    this.controllerAdapter.attachToRoute(
+      {
+        ...handlerWithMetaData.$METADATA,
+        handler: this.cleanHandler(handlerWithMetaData),
+      },
+      { basePath: controllerInstance.$METADATA.basePath }
+    );
+    return;
+  }
+
+  private cleanHandler(handler: ConstructorReturnType<T>[string]) {
+    const cleanedHandler = handler;
+    (cleanedHandler.$METADATA as IHandlerMetaData | undefined) = undefined;
+    return cleanedHandler;
+  }
+}
+
+export class ModuleClassManager<T extends IModuleClass = any> {
+  private exportContainer: Container | undefined;
+  constructor(private ModuleClass: T) {}
+
+  createModuleInstance(
+    serviceAdapter: IServiceAdapter,
+    controllerAdapter: IControllerAdapter
+  ) {
+    return new this.ModuleClass(serviceAdapter, controllerAdapter);
+  }
+
+  setExportContainer(container: Container) {
+    this.exportContainer = container;
+  }
+
+  getExportContainer() {
+    return this.exportContainer;
+  }
 }

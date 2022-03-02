@@ -64,3 +64,11 @@ export type IControllerDecoConstructor = {
 export type IClassWithKey<T extends Constructor> = T & {
   $KEY: symbol;
 };
+
+export interface IServiceAdapter {
+  attachLifeCycleListener: (service: IService) => void;
+}
+
+export interface IControllerAdapter {
+  attachToRoute: (routeConfig: {}, baseConfig: { basePath: string }) => void;
+}
