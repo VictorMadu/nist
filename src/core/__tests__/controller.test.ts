@@ -1,7 +1,13 @@
+import { P } from "pino";
 import { ConstructorReturnType } from "src/types";
 import { INJECTABLE_KEY, METADATA_KEY } from "../constant";
 import { Controller, IReturnTypeControllerFn } from "../controller";
+import { Inject } from "../inject";
 import * as injectable from "../injectable";
+import { metaDecorator } from "../metaDecorator";
+import { Get, Post } from "../methods";
+import * as _ from "lodash";
+import { getAllClassMethodsName } from "../../utils";
 
 const setUp1 = () => {
   class ControllerClass {}
@@ -23,6 +29,53 @@ const setUp2 = (
   return [ControllerClass as IReturnTypeControllerFn, mControllerClass];
 };
 
+const setUp3 = (
+  controllerPath: string | undefined = undefined,
+  method1Path: string | undefined = undefined,
+  method2Path: string | undefined = undefined
+): [
+  { new (...args: any[]): any },
+  string,
+  string,
+  string,
+  string,
+  string,
+  string
+] => {
+  const method1 = "method1";
+  const method2 = "method2";
+  const additionMethod1MetaKey = "additional";
+  const additionMethod1MetaValue = "additional";
+  const additionMethod2MetaKey = "additional";
+  const additionMethod2MetaValue = "additional";
+  @Controller(controllerPath)
+  class Controller1 {
+    constructor() {}
+
+    @((metaDecorator as any)(additionMethod1MetaKey, additionMethod1MetaValue))
+    @Get(method1Path)
+    [method1]() {
+      return "method1";
+    }
+
+    @((metaDecorator as any)(additionMethod2MetaKey, additionMethod2MetaValue))
+    @Post(method2Path)
+    [method2]() {
+      return "method1";
+    }
+  }
+
+  return [
+    Controller1,
+    method1,
+    method2,
+    additionMethod1MetaKey,
+    additionMethod1MetaValue,
+    additionMethod2MetaKey,
+    additionMethod2MetaValue,
+  ];
+};
+
 describe(`test for controller`, () => {
   describe(`test for calls on 'Injectable'`, () => {
     let spyInjectable: jest.SpyInstance;
@@ -42,6 +95,7 @@ describe(`test for controller`, () => {
     afterAll(() => {
       mockInjectable.mockClear();
       mockInjectableReturnFn.mockClear();
+      spyInjectable.mockRestore();
     });
 
     test(`should be called once`, () => {
@@ -107,6 +161,226 @@ describe(`test for controller`, () => {
         const [_, mControllerClass]: any = setUp2(path);
         expect(mControllerClass[METADATA_KEY]).toEqual({
           basePath: path,
+        });
+      });
+    });
+  });
+
+  describe(`test for a fully constructed Controller Class`, () => {
+    describe(`test for default behaviour`, () => {
+      let Controller: { new (...args: any[]): any };
+      let controller: any;
+      let method1: string;
+      let method2: string;
+      let additionMethod1MetaKey: string;
+      let additionMethod1MetaValue: string;
+      let additionMethod2MetaKey: string;
+      let additionMethod2MetaValue: string;
+
+      let controllerPath: undefined = undefined;
+      let method1Path = "";
+      let method2Path = "/cat/:id/post";
+
+      beforeAll(() => {
+        [
+          Controller,
+          method1,
+          method2,
+          additionMethod1MetaKey,
+          additionMethod1MetaValue,
+          additionMethod2MetaKey,
+          additionMethod2MetaValue,
+        ] = setUp3(controllerPath, method1Path, method2Path);
+
+        controller = new Controller();
+      });
+      test(`should 'Controller' be defined`, () => {
+        expect(Controller).toBeDefined();
+      });
+
+      test(`should 'method1' be defined`, () => {
+        expect(method1).toBeDefined();
+      });
+      test(`should 'method2' be defined`, () => {
+        expect(method2).toBeDefined();
+      });
+      test(`should 'additionMethod1MetaKey' be defined`, () => {
+        expect(additionMethod1MetaKey).toBeDefined();
+      });
+      test(`should 'additionMethod1MetaValue' be defined`, () => {
+        expect(additionMethod1MetaValue).toBeDefined();
+      });
+      test(`should 'additionMethod2MetaKey' be defined`, () => {
+        expect(additionMethod2MetaKey).toBeDefined();
+      });
+      test(`should 'additionMethod2MetaValue' be defined`, () => {
+        expect(additionMethod2MetaValue).toBeDefined();
+      });
+
+      describe(`test for instance`, () => {
+        test(`should be defined`, () => {
+          expect(controller).toBeDefined();
+        });
+        describe(`test for 'METADATA'`, () => {
+          test(`should be defined`, () => {
+            expect(controller[METADATA_KEY]).toBeDefined();
+          });
+          describe(`test for properties`, () => {
+            describe(`test for basePath`, () => {
+              test(`should be defined`, () => {
+                expect(controller[METADATA_KEY]).toHaveProperty("basePath");
+              });
+              test(`should be of type string`, () => {
+                expect(typeof controller[METADATA_KEY].basePath).toBe("string");
+              });
+              test(`should be of correct value`, () => {
+                expect(controller[METADATA_KEY].basePath).toBe("");
+              });
+            });
+          });
+        });
+      });
+
+      describe(`test for method1`, () => {
+        let handler1: any;
+        beforeAll(() => {
+          handler1 = _.get(controller, method1);
+        });
+        test(`should be defined`, () => {
+          expect(handler1).toBeDefined();
+        });
+        describe(`test for 'METADATA'`, () => {
+          let handlerMetaData: any;
+          beforeAll(() => {
+            handlerMetaData = controller[method1][METADATA_KEY];
+          });
+          test(`should be defined`, () => {
+            expect(handlerMetaData).toBeDefined();
+          });
+          describe(`test for 'method`, () => {
+            let method: any;
+            beforeAll(() => {
+              method = handlerMetaData.method;
+            });
+
+            test(`should have prop 'method'`, () => {
+              expect(handlerMetaData).toHaveProperty("method");
+            });
+
+            test(`should be defined`, () => {
+              expect(method).toBeDefined();
+            });
+            test(`should be of correct value`, () => {
+              expect(method).toBe("GET");
+            });
+          });
+          describe(`test for 'url`, () => {
+            let url: any;
+            beforeAll(() => {
+              url = handlerMetaData.url;
+            });
+
+            test(`should have prop 'url'`, () => {
+              expect(handlerMetaData).toHaveProperty("url");
+            });
+
+            test(`should be defined`, () => {
+              expect(url).toBeDefined();
+            });
+            test(`should be of correct value`, () => {
+              expect(url).toBe(controllerPath ?? "" + method1Path);
+            });
+          });
+
+          describe(`test for additional metaDecorator`, () => {
+            describe(`test for 'additionMethod1MetaKey'`, () => {
+              test(`should have property`, () => {
+                expect(handlerMetaData).toHaveProperty(additionMethod1MetaKey);
+              });
+
+              test(`should be defined`, () => {
+                expect(handlerMetaData[additionMethod1MetaKey]).toBeDefined();
+              });
+
+              test(`should be correct value`, () => {
+                expect(handlerMetaData[additionMethod1MetaKey]).toBe(
+                  additionMethod1MetaValue
+                );
+              });
+            });
+          });
+        });
+      });
+
+      describe(`test for method2`, () => {
+        let handler2: any;
+        beforeAll(() => {
+          handler2 = _.get(controller, method2);
+        });
+        test(`should be defined`, () => {
+          expect(handler2).toBeDefined();
+        });
+        describe(`test for 'METADATA'`, () => {
+          let handlerMetaData: any;
+          beforeAll(() => {
+            handlerMetaData = controller[method2][METADATA_KEY];
+          });
+          test(`should be defined`, () => {
+            expect(handlerMetaData).toBeDefined();
+          });
+          describe(`test for 'method`, () => {
+            let method: any;
+            beforeAll(() => {
+              method = handlerMetaData.method;
+            });
+
+            test(`should have prop 'method'`, () => {
+              expect(handlerMetaData).toHaveProperty("method");
+            });
+
+            test(`should be defined`, () => {
+              expect(method).toBeDefined();
+            });
+            // TODO: Automatic method name for here and also method1
+            test(`should be of correct value`, () => {
+              expect(method).toBe("POST");
+            });
+          });
+          describe(`test for 'url`, () => {
+            let url: any;
+            beforeAll(() => {
+              url = handlerMetaData.url;
+            });
+
+            test(`should have prop 'url'`, () => {
+              expect(handlerMetaData).toHaveProperty("url");
+            });
+
+            test(`should be defined`, () => {
+              expect(url).toBeDefined();
+            });
+            test(`should be of correct value`, () => {
+              expect(url).toBe(controllerPath ?? "" + method2Path);
+            });
+          });
+
+          describe(`test for additional metaDecorator`, () => {
+            describe(`test for 'additionMethod2MetaKey'`, () => {
+              test(`should have property`, () => {
+                expect(handlerMetaData).toHaveProperty(additionMethod2MetaKey);
+              });
+
+              test(`should be defined`, () => {
+                expect(handlerMetaData[additionMethod2MetaKey]).toBeDefined();
+              });
+
+              test(`should be correct value`, () => {
+                expect(handlerMetaData[additionMethod2MetaKey]).toBe(
+                  additionMethod2MetaValue
+                );
+              });
+            });
+          });
         });
       });
     });

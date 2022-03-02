@@ -11,12 +11,17 @@ import {
 export type IReturnTypeControllerFn = ReturnType<ReturnType<typeof Controller>>;
 
 export function Controller(path = "") {
-  return function (TargetClass: {
-    new (...args: any[]): any;
-  }): {
+  return function <
+    T extends {
+      new (...args: any[]): any;
+    }
+  >(
+    TargetClass: T
+  ): {
     new (...args: any[]): {
-      [METADATA_KEY]: IControllerMetadata[typeof METADATA_KEY];
-    } & Record<string | symbol, any>;
+      [METADATA_KEY]: IControllerMetadata[typeof METADATA_KEY] &
+        Record<string, any>;
+    } & any;
     [INJECTABLE_KEY]: symbol;
   } {
     return class extends Injectable()(TargetClass) {
