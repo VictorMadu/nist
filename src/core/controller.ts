@@ -7,6 +7,7 @@ import {
   IControllerDecoConstructor,
   IControllerMetadata,
 } from "./interface";
+import "reflect-metadata";
 
 export type IReturnTypeControllerFn = ReturnType<ReturnType<typeof Controller>>;
 
@@ -25,7 +26,6 @@ export function Controller(path = "") {
     [INJECTABLE_KEY]: symbol;
   } {
     return class extends Injectable()(TargetClass) {
-      static [INJECTABLE_KEY] = Symbol();
       [METADATA_KEY]: IControllerMetadata[typeof METADATA_KEY];
       constructor(...args: any[]) {
         super(...args);

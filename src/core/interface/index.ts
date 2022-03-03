@@ -1,21 +1,30 @@
 import { FastifyRequest, FastifyReply, FastifyInstance } from "fastify";
-import { Constructor, ExactlyOrWithPromise } from "../../types";
-export type IMETADATA_KEY = "$METADATA";
-export type INJECTABLE_KEY = "$KEY";
+import { Container } from "inversify";
+import {
+  Constructor,
+  ConstructorReturnType,
+  ExactlyOrWithPromise,
+} from "../../types";
+import { INJECTABLE_KEY, METADATA_KEY } from "../constant";
 
 export type IMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS";
+
+export type Injectable = {
+  new (...args: any[]): any;
+  [INJECTABLE_KEY]: symbol;
+};
 
 export interface IController {
   [key: string]: {
     (req: FastifyRequest, rep: FastifyReply): void | Promise<
       Record<string, any>
     >;
-    $METADATA: IHandlerMetaData;
+    [METADATA_KEY]: IHandlerMetaData;
   };
 }
 
 export interface IControllerMetadata {
-  $METADATA: { basePath: string };
+  [METADATA_KEY]: { basePath: string };
 }
 
 export interface IAnyMethod {
@@ -52,17 +61,17 @@ export type IService = IServiceListeners & IAnyMethod;
 
 export type IServiceDecoConstructor = {
   new (...args: any[]): IService;
-  $KEY: symbol;
+  [INJECTABLE_KEY]: symbol;
 };
 
 export type IControllerDecoConstructor = {
   new (...args: any[]): IController & IControllerMetadata;
 
-  $KEY: symbol;
+  [INJECTABLE_KEY]: symbol;
 };
 
 export type IClassWithKey<T extends Constructor> = T & {
-  $KEY: symbol;
+  [INJECTABLE_KEY]: symbol;
 };
 
 export interface IServiceAdapter {
@@ -71,4 +80,30 @@ export interface IServiceAdapter {
 
 export interface IControllerAdapter {
   attachToRoute: (routeConfig: {}, baseConfig: { basePath: string }) => void;
+}
+
+export interface IModuleClassManager {
+  createModuleInstance: () => IModule;
+
+  setExportContainer: (container: Container) => void;
+  getExportContainer: () => Container | undefined;
+}
+
+export type IModule = {
+  load: (
+    serviceLoader: ILoader<IServiceDecoConstructor, IServiceAdapter>,
+    controlerLoader: ILoader<IControllerDecoConstructor, IControllerAdapter>
+  ) => Container;
+};
+
+export type IModuleClass = Constructor<never, IModule>;
+
+// U for adapter type
+export interface ILoader<
+  T extends { new (...args: any[]): any; [INJECTABLE_KEY]: symbol },
+  U extends object = object
+> {
+  load: (container: Container, service: T) => void;
+
+  getAdapter: () => U;
 }
