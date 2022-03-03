@@ -1,19 +1,15 @@
-import { Container } from "inversify";
-import { ContainerHelper } from "../containerHelper";
 import { ConstructorReturnType } from "../types";
-import { INJECTABLE_KEY } from "./constant";
 import { IServiceDecoConstructor, IServiceAdapter, ILoader } from "./interface";
+import { Loader } from "./_loader";
 
 export class ServiceLoader<
   T extends IServiceDecoConstructor = IServiceDecoConstructor
-> implements ILoader<T, IServiceAdapter> {
-  constructor(private serviceAdapter: IServiceAdapter) {}
-  load(container: Container, service: T) {
-    const serviceInstance = new ContainerHelper().get(container, service);
-    this.serviceAdapter.attachLifeCycleListener(serviceInstance);
+> extends Loader<T> implements ILoader<T, IServiceAdapter> {
+  constructor(private serviceAdapter: IServiceAdapter) {
+    super();
   }
 
-  getAdapter() {
-    return this.serviceAdapter;
+  load(service: ConstructorReturnType<T>) {
+    this.serviceAdapter.attachLifeCycleListener(service);
   }
 }

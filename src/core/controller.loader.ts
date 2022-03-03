@@ -1,36 +1,30 @@
-import { Container } from "inversify";
 import _ from "lodash";
-import { ContainerHelper } from "../containerHelper";
 import { ConstructorReturnType } from "../types";
 import { getAllClassMethodsName, throwError } from "../utils";
-import { INJECTABLE_KEY, METADATA_KEY } from "./constant";
+import { METADATA_KEY } from "./constant";
 import {
   IControllerDecoConstructor,
   IControllerAdapter,
   IHandlerMetaData,
   ILoader,
-  Injectable,
-  IController,
 } from "./interface";
+import { Loader } from "./_loader";
 
 export class ControllerLoader<
   T extends IControllerDecoConstructor = IControllerDecoConstructor
-> implements ILoader<T, IControllerAdapter> {
-  constructor(private controllerAdapter: IControllerAdapter) {}
+> extends Loader<T> implements ILoader<T, IControllerAdapter> {
+  constructor(private controllerAdapter: IControllerAdapter) {
+    super();
+  }
 
-  load(container: Container, Controller: T) {
-    const controllerInstance = new ContainerHelper().get(container, Controller);
+  load(controller: ConstructorReturnType<T>) {
     const controllerMethodsName = getAllClassMethodsName(
-      controllerInstance.constructor
+      controller.constructor
     );
 
     _.forEach(controllerMethodsName, (methodName) =>
-      this.attachToRoute(controllerInstance, methodName)
+      this.attachToRoute(controller, methodName)
     );
-  }
-
-  getAdapter() {
-    return this.controllerAdapter;
   }
 
   private attachToRoute(

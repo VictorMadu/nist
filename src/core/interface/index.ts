@@ -103,7 +103,7 @@ export interface ILoader<
   T extends { new (...args: any[]): any; [INJECTABLE_KEY]: symbol },
   U extends object = object
 > {
-  load: (container: Container, service: T) => void;
+  getInstance: (container: Container, Service: T) => ConstructorReturnType<T>;
 
-  getAdapter: () => U;
+  load: (service: ConstructorReturnType<T>) => void;
 }
