@@ -84,11 +84,11 @@ export function Module(config: IConfig) {
         );
 
         _.forEach(((config as any) as _IConfig).services, (Service) =>
-          serviceLoader.load(mergedContainers, Service)
+          serviceLoader.getInstance(mergedContainers, Service)
         );
 
         _.forEach(((config as any) as _IConfig).controllers, (Controller) =>
-          controllerLoader.load(mergedContainers, Controller)
+          controllerLoader.getInstance(mergedContainers, Controller)
         );
 
         return this.exportContainer;
