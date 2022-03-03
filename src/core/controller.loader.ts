@@ -22,10 +22,9 @@ export class ControllerLoader<
     const controllerMethodsName = getAllClassMethodsName(
       controller.constructor
     );
-
-    _.forEach(controllerMethodsName, (methodName) =>
-      this.attachToRoute(controller, methodName)
-    );
+    _.forEach(controllerMethodsName, (methodName) => {
+      this.attachToRoute(controller, methodName);
+    });
   }
 
   private attachToRoute(
