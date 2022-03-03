@@ -22,9 +22,8 @@ describe(`test for 'ServiceLoader'`, () => {
 
   describe(`test for method 'getInstance'`, () => {
     let serviceLoader: ServiceLoader;
-    let mockServiceAdapter_attachLifeCycleListener = jest.fn((a: any) => a);
     let mockServiceAdapter = {
-      attachLifeCycleListener: mockServiceAdapter_attachLifeCycleListener,
+      attachLifeCycleListener: jest.fn((a: any) => a),
     };
 
     beforeAll(() => {
