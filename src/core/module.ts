@@ -83,12 +83,12 @@ export function Module(config: IConfig) {
           ...importContainers
         );
 
-        _.forEach(((config as any) as _IConfig).services, (service) =>
-          serviceLoader.load(mergedContainers, service)
+        _.forEach(((config as any) as _IConfig).services, (Service) =>
+          serviceLoader.load(mergedContainers, Service)
         );
 
-        _.forEach(((config as any) as _IConfig).controllers, (controller) =>
-          controllerLoader.load(mergedContainers, controller)
+        _.forEach(((config as any) as _IConfig).controllers, (Controller) =>
+          controllerLoader.load(mergedContainers, Controller)
         );
 
         return this.exportContainer;
@@ -123,25 +123,6 @@ export function Module(config: IConfig) {
         return moduleManager.getExportContainer() as Container;
       }
 
-      // private loadControllers(container: Container) {
-      //   const controllerLoader = new ControllerLoader(
-      //     container,
-      //     this.controllerAdapter
-      //   );
-
-      //   _.forEach(((config as any) as _IConfig).controllers, (controller) =>
-      //     controllerLoader.load(controller)
-      //   );
-      // }
-
-      // private loadServices(container: Container) {
-      //   const serviceLoader = new ServiceLoader(container, this.serviceAdapter);
-
-      //   return _.forEach(((config as any) as _IConfig).services, (service) =>
-      //     serviceLoader.load(service)
-      //   );
-      // }
-
       private bindInjectables(
         ...injectablesAndContainers: [
           IControllerDecoConstructor[] | IServiceDecoConstructor[],
@@ -167,16 +148,3 @@ export function Module(config: IConfig) {
     return ModuleClassManagerMixin(Decorated);
   };
 }
-
-// export const getExportContainer = (moduleManager: IModuleClassManager) => (
-//   serviceLoader: ILoader<IServiceDecoConstructor, IServiceAdapter>,
-//   controllerLoader: ILoader<IControllerDecoConstructor, IControllerAdapter>
-// ) => {
-//   if (moduleManager.getExportContainer()) {
-//     const moduleInstance = moduleManager.createModuleInstance();
-//     moduleManager.setExportContainer(
-//       moduleInstance.load(serviceLoader, controllerLoader)
-//     );
-//   }
-//   return moduleManager.getExportContainer() as Container;
-// };
