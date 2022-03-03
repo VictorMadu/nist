@@ -8,6 +8,7 @@ import {
   IHandlerMetaData,
   ILoader,
 } from "./interface";
+import { getFromMetaData, setMetaData } from "./utils";
 import { Loader } from "./_loader";
 
 export class ControllerLoader<
@@ -41,17 +42,17 @@ export class ControllerLoader<
     ] as ConstructorReturnType<T>[string];
     this.controllerAdapter.attachToRoute(
       {
-        ...handlerWithMetaData[METADATA_KEY],
+        ...getFromMetaData(handlerWithMetaData),
         handler: this.cleanHandler(handlerWithMetaData),
       },
-      { basePath: controllerInstance[METADATA_KEY].basePath }
+      { basePath: getFromMetaData(controllerInstance, "basePath") }
     );
     return;
   }
 
   private cleanHandler(handler: ConstructorReturnType<T>[string]) {
     const cleanedHandler = handler;
-    (cleanedHandler.$METADATA as IHandlerMetaData | undefined) = undefined;
+    setMetaData(cleanedHandler, undefined, undefined);
     return cleanedHandler;
   }
 }
