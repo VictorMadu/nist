@@ -1,4 +1,5 @@
 import { Container } from "inversify";
+import { ContainerHelper } from "../../containerHelper";
 import { ConstructorReturnType, Constructor } from "../../types";
 import { INJECTABLE_KEY } from "../constant";
 import { Controller } from "../controller";
@@ -10,11 +11,16 @@ import {
   IService,
   IModuleClass,
   IModuleClassManager,
+  IModule,
+  ILoader,
+  IControllerDecoConstructor,
+  IServiceDecoConstructor,
+  Injectable as IInjectable,
 } from "../interface";
 import { Get, Post } from "../methods";
 import { IConfig, Module } from "../module";
-import { ServiceLoader } from "../service.loader";
 
+// TODO: Check if manual garbage collection is faster
 const setUp1 = (): [Constructor, IModuleClassManager] => {
   class ModuleClass {}
   const config: IConfig = {
@@ -173,84 +179,175 @@ describe(`test for 'Module'`, () => {
   });
 
   describe(`test for created module instance`, () => {
-    test.todo(`should be defined`, () => {});
+    let module: IModule;
 
-    test.todo(`should be of type 'object'`, () => {});
+    beforeAll(() => {
+      module = new AppModuleCreator().createModuleInstance();
+    });
+
+    test(`should be defined`, () => {
+      expect(module).toBeDefined();
+    });
+
+    test(`should be of type 'object'`, () => {
+      expect(typeof module).toBe("object");
+    });
 
     describe(`test for method 'load'`, () => {
-      test.todo(`should be defined`, () => {});
+      let load: IModule["load"];
+      beforeAll(() => {
+        load = module.load.bind(module);
+      });
 
-      test.todo(`should be of type 'function'`, () => {});
+      test(`should be defined`, () => {
+        expect(load).toBeDefined();
+      });
+
+      test(`should be of type 'function'`, () => {
+        expect(typeof load).toBe("function");
+      });
 
       describe("test for calls", () => {
-        test.todo(`should not throw`, () => {});
+        let mockServiceLoader: ILoader<
+          IServiceDecoConstructor,
+          IServiceAdapter
+        >;
+        let mockControllerLoader: ILoader<
+          IControllerDecoConstructor,
+          IControllerAdapter
+        >;
 
-        test.todo(`should return`, () => {});
+        describe("test for behaviour on call", () => {
+          let loaderSetUp: any;
+          let load: IModule["load"];
+
+          beforeAll(() => {
+            load = module.load.bind(module);
+            loaderSetUp = () => load(mockServiceLoader, mockControllerLoader);
+            mockServiceLoader = {
+              getInstance: jest.fn(),
+              load: jest.fn(),
+            };
+            mockControllerLoader = {
+              getInstance: jest.fn(),
+              load: jest.fn(),
+            };
+          });
+
+          test(`should not throw`, () => {
+            expect(loaderSetUp).not.toThrow();
+          });
+
+          test(`should return`, () => {
+            expect(loaderSetUp()).toBeDefined();
+          });
+        });
 
         describe(`test for return value`, () => {
-          test.todo(`should be defined`, () => {});
+          let exportContainer: Container;
+          let module: IModule;
+          let load: IModule["load"];
 
-          test.todo(`should of type 'Container'`, () => {});
+          beforeAll(() => {
+            module = new AppModuleCreator().createModuleInstance();
+            load = module.load.bind(module);
+            exportContainer = load(mockServiceLoader, mockControllerLoader);
+          });
+
+          test(`should be defined`, () => {
+            expect(exportContainer).toBeDefined();
+          });
+
+          test(`should of type 'Container'`, () => {
+            expect(exportContainer).toBeInstanceOf(Container);
+          });
 
           describe(`test for behaviour`, () => {
+            let getInstance: any;
+            getInstance = (injectable: IInjectable) => {
+              return new ContainerHelper().get(exportContainer, injectable);
+            };
             describe(`test for get on 'Service1'`, () => {
-              test.todo(`should throw`, () => {});
+              test(`should throw`, () => {
+                expect(() => getInstance(Service1)).toThrow();
+              });
             });
             describe(`test for get on 'Service2'`, () => {
-              test.todo(`should not throw`, () => {});
+              test(`should not throw`, () => {
+                expect(() => getInstance(Service2)).not.toThrow();
+              });
 
               describe(`test for returned instance`, () => {
-                test.todo(`should to defined`, () => {});
+                let service2Instance: any;
+                beforeAll(() => {
+                  service2Instance = getInstance(Service2);
+                });
+                test(`should to defined`, () => {
+                  expect(service2Instance).toBeDefined();
+                });
 
-                test.todo(`should to defined`, () => {});
-
-                test.todo(`should to instance of 'Service2'`, () => {});
+                test(`should to instance of 'Service2'`, () => {
+                  expect(service2Instance).toBeInstanceOf(Service2);
+                });
               });
             });
 
             describe(`test for get on 'Service3'`, () => {
-              test.todo(`should not throw`, () => {});
+              test(`should not throw`, () => {
+                expect(() => getInstance(Service3)).not.toThrow();
+              });
 
               describe(`test for returned instance`, () => {
-                test.todo(`should to defined`, () => {});
+                let service2Instance: any;
+                beforeAll(() => {
+                  service2Instance = getInstance(Service3);
+                });
+                test(`should to defined`, () => {
+                  expect(service2Instance).toBeDefined();
+                });
 
-                test.todo(`should to defined`, () => {});
-
-                test.todo(`should to instance of 'Service3'`, () => {});
+                test(`should to instance of 'Service3'`, () => {
+                  expect(service2Instance).toBeInstanceOf(Service3);
+                });
               });
             });
 
             describe(`test for get on 'Controller1'`, () => {
-              test.todo(`should throw`, () => {});
+              test(`should throw`, () => {
+                expect(() => getInstance(Controller1)).toThrow();
+              });
             });
 
             describe(`test for get on 'Controller2'`, () => {
-              test.todo(`should throw`, () => {});
+              test(`should throw`, () => {
+                expect(() => getInstance(Controller2)).toThrow();
+              });
             });
           });
         });
-
+        // TODO: Repharse from here down to be test for 'ServiceLoader' and 'ControllerLoader'
+        // TODO: Also test to see that argument from 'getInstance' is passed to 'load'
         describe(`test for 'Service' types`, () => {
           describe(`test for action with 'Service1'`, () => {
             describe(`test for call on 'ServiceLoader'`, () => {
               describe(`test for arguments passed`, () => {
-                test.todo(`should be called with two aruments`, () => {});
+                test.todo(`should be called with two aruments`);
 
                 describe(`test for first arument`, () => {
-                  test.todo(`should be defined`, () => {});
+                  test.todo(`should be defined`);
 
-                  test.todo(`should be of type Container`, () => {});
+                  test.todo(`should be of type Container`);
                 });
 
                 describe(`test for second arument`, () => {
-                  test.todo(`should be defined`, () => {});
+                  test.todo(`should be defined`);
 
                   describe("test for its properties", () => {
-                    test.todo(`should have 'INJECTABLE_KEY'`, () => {});
+                    test.todo(`should have 'INJECTABLE_KEY'`);
                     describe(`test for 'INJECTABLE_KEY'`, () => {
-                      test.todo(`should be defined`, () => {});
+                      test.todo(`should be defined`);
 
-                      test.todo(`should be one of`, () => {});
+                      test.todo(`should be one of`);
                     });
                   });
                 });
@@ -261,23 +358,23 @@ describe(`test for 'Module'`, () => {
           describe(`test for action with 'Service2'`, () => {
             describe(`test for call on 'ServiceLoader'`, () => {
               describe(`test for arguments passed`, () => {
-                test.todo(`should be called with two aruments`, () => {});
+                test.todo(`should be called with two aruments`);
 
                 describe(`test for first arument`, () => {
-                  test.todo(`should be defined`, () => {});
+                  test.todo(`should be defined`);
 
-                  test.todo(`should be of type Container`, () => {});
+                  test.todo(`should be of type Container`);
                 });
 
                 describe(`test for second arument`, () => {
-                  test.todo(`should be defined`, () => {});
+                  test.todo(`should be defined`);
 
                   describe("test for its properties", () => {
-                    test.todo(`should have 'INJECTABLE_KEY'`, () => {});
+                    test.todo(`should have 'INJECTABLE_KEY'`);
                     describe(`test for 'INJECTABLE_KEY'`, () => {
-                      test.todo(`should be defined`, () => {});
+                      test.todo(`should be defined`);
 
-                      test.todo(`should be one of`, () => {});
+                      test.todo(`should be one of`);
                     });
                   });
                 });
@@ -288,23 +385,23 @@ describe(`test for 'Module'`, () => {
           describe(`test for action with 'Service3'`, () => {
             describe(`test for call on 'ServiceLoader'`, () => {
               describe(`test for arguments passed`, () => {
-                test.todo(`should be called with two aruments`, () => {});
+                test.todo(`should be called with two aruments`);
 
                 describe(`test for first arument`, () => {
-                  test.todo(`should be defined`, () => {});
+                  test.todo(`should be defined`);
 
-                  test.todo(`should be of type Container`, () => {});
+                  test.todo(`should be of type Container`);
                 });
 
                 describe(`test for second arument`, () => {
-                  test.todo(`should be defined`, () => {});
+                  test.todo(`should be defined`);
 
                   describe("test for its properties", () => {
-                    test.todo(`should have 'INJECTABLE_KEY'`, () => {});
+                    test.todo(`should have 'INJECTABLE_KEY'`);
                     describe(`test for 'INJECTABLE_KEY'`, () => {
-                      test.todo(`should be defined`, () => {});
+                      test.todo(`should be defined`);
 
-                      test.todo(`should be one of`, () => {});
+                      test.todo(`should be one of`);
                     });
                   });
                 });
@@ -317,23 +414,23 @@ describe(`test for 'Module'`, () => {
           describe(`test for action with 'Controller1'`, () => {
             describe(`test for call on 'ControllerLoader'`, () => {
               describe(`test for arguments passed`, () => {
-                test.todo(`should be called with two aruments`, () => {});
+                test.todo(`should be called with two aruments`);
 
                 describe(`test for first arument`, () => {
-                  test.todo(`should be defined`, () => {});
+                  test.todo(`should be defined`);
 
-                  test.todo(`should be of type Container`, () => {});
+                  test.todo(`should be of type Container`);
                 });
 
                 describe(`test for second arument`, () => {
-                  test.todo(`should be defined`, () => {});
+                  test.todo(`should be defined`);
 
                   describe("test for its properties", () => {
-                    test.todo(`should have 'INJECTABLE_KEY'`, () => {});
+                    test.todo(`should have 'INJECTABLE_KEY'`);
                     describe(`test for 'INJECTABLE_KEY'`, () => {
-                      test.todo(`should be defined`, () => {});
+                      test.todo(`should be defined`);
 
-                      test.todo(`should be one of`, () => {});
+                      test.todo(`should be one of`);
                     });
                   });
                 });
@@ -344,23 +441,23 @@ describe(`test for 'Module'`, () => {
           describe(`test for action with 'Controller2'`, () => {
             describe(`test for call on 'ControllerLoader'`, () => {
               describe(`test for arguments passed`, () => {
-                test.todo(`should be called with two aruments`, () => {});
+                test.todo(`should be called with two aruments`);
 
                 describe(`test for first arument`, () => {
-                  test.todo(`should be defined`, () => {});
+                  test.todo(`should be defined`);
 
-                  test.todo(`should be of type Container`, () => {});
+                  test.todo(`should be of type Container`);
                 });
 
                 describe(`test for second arument`, () => {
-                  test.todo(`should be defined`, () => {});
+                  test.todo(`should be defined`);
 
                   describe("test for its properties", () => {
-                    test.todo(`should have 'INJECTABLE_KEY'`, () => {});
+                    test.todo(`should have 'INJECTABLE_KEY'`);
                     describe(`test for 'INJECTABLE_KEY'`, () => {
-                      test.todo(`should be defined`, () => {});
+                      test.todo(`should be defined`);
 
-                      test.todo(`should be one of`, () => {});
+                      test.todo(`should be one of`);
                     });
                   });
                 });
