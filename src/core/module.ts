@@ -83,13 +83,17 @@ export function Module(config: IConfig) {
           ...importContainers
         );
 
-        _.forEach(((config as any) as _IConfig).services, (Service) =>
-          serviceLoader.getInstance(mergedContainers, Service)
-        );
+        _.forEach(((config as any) as _IConfig).services, (Service) => {
+          serviceLoader.load(
+            serviceLoader.getInstance(mergedContainers, Service)
+          );
+        });
 
-        _.forEach(((config as any) as _IConfig).controllers, (Controller) =>
-          controllerLoader.getInstance(mergedContainers, Controller)
-        );
+        _.forEach(((config as any) as _IConfig).controllers, (Controller) => {
+          controllerLoader.load(
+            controllerLoader.getInstance(mergedContainers, Controller)
+          );
+        });
 
         return this.exportContainer;
       }
