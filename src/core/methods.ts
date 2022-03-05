@@ -27,8 +27,6 @@ function Method(method: IMethod, path = "") {
     key: string,
     descriptor: PropertyDescriptor
   ) {
-    const metaData = target[key]["$METADATA"] ?? {};
-    target[key]["$METADATA"] = metaData;
     metaDecorator("method", method)(target, key, descriptor);
     metaDecorator("url", path)(target, key, descriptor);
   };

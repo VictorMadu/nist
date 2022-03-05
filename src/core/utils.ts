@@ -11,8 +11,11 @@ export function getFromMetaData(
   return _.isUndefined(key) ? objMetadata : _.get(objMetadata, key);
 }
 
-export function setMetaData(obj: object, key: string | undefined, value: any) {
-  const setKey = _.isUndefined(key) ? METADATA_KEY : `${METADATA_KEY}.${key}`;
-
+export function setMetaData(obj: object, key: string, value: any) {
+  const setKey = `${METADATA_KEY}.${key}`;
   _.set(obj, setKey, value);
+}
+
+export function removeMetaData(obj: object) {
+  _.set(obj, METADATA_KEY, undefined);
 }

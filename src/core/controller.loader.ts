@@ -1,14 +1,13 @@
 import _ from "lodash";
 import { ConstructorReturnType } from "../types";
 import { getAllClassMethodsName, throwError } from "../utils";
-import { METADATA_KEY } from "./constant";
 import {
   IControllerDecoConstructor,
   IControllerAdapter,
   IHandlerMetaData,
   ILoader,
 } from "./interface";
-import { getFromMetaData, setMetaData } from "./utils";
+import { getFromMetaData, removeMetaData, setMetaData } from "./utils";
 import { Loader } from "./_loader";
 
 export class ControllerLoader<
@@ -50,8 +49,7 @@ export class ControllerLoader<
   }
 
   private cleanHandler(handler: ConstructorReturnType<T>[string]) {
-    const cleanedHandler = handler;
-    setMetaData(cleanedHandler, undefined, undefined);
-    return cleanedHandler;
+    removeMetaData(handler);
+    return handler;
   }
 }
