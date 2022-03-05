@@ -1,13 +1,10 @@
-import { P } from "pino";
-import { ConstructorReturnType } from "src/types";
+import { ConstructorReturnType } from "../../types";
 import { INJECTABLE_KEY, METADATA_KEY } from "../constant";
 import { Controller, IReturnTypeControllerFn } from "../controller";
-import { Inject } from "../inject";
 import * as injectable from "../injectable";
 import { metaDecorator } from "../metaDecorator";
 import { Get, Post } from "../methods";
 import * as _ from "lodash";
-import { getAllClassMethodsName } from "../../utils";
 
 const setUp1 = () => {
   class ControllerClass {}
