@@ -1,17 +1,23 @@
 import { METADATA_KEY } from "./constant";
-import { IController, IHandlerMetaData } from "./interface";
-import { setMetaData } from "./utils";
+import { IMetadata, IParamsMetadata } from "./interface/utils.interface";
+import { setMetaData, setMethodParamsMetaData } from "./utils";
 
-export function metaDecorator(metaKey: string, metaValue: any) {
+export function metaMethodDecorator(metaKey: string, metaValue: any) {
   return function (
-    target: {
-      [key: string]: {
-        [METADATA_KEY]: Record<string, any>;
-      };
-    },
+    target: { [method: string | symbol]: IMetadata },
     key: string,
     descriptor: PropertyDescriptor
   ) {
     setMetaData(target[key], metaKey, metaValue);
+  };
+}
+
+export function metaParamDecorator(metaKey: string, metaValue: any) {
+  return function (
+    target: { [method: string | symbol]: IParamsMetadata },
+    key: string | symbol,
+    index: number
+  ) {
+    setMethodParamsMetaData(target[key], index, metaKey, metaValue);
   };
 }

@@ -1,17 +1,20 @@
 import { Container } from "inversify";
-import { INJECTABLE_KEY } from "./core/constant";
-import { ConstructorReturnType } from "./types";
+import { INJECTABLE_KEY } from "./constant";
+import { ConstructorReturnType } from "../types";
 import * as _ from "lodash";
-import { Injectable } from "./core/interface";
+import { InjectableClass } from "./interface/injectable.interface";
 
 export class ContainerHelper {
   constructor() {}
 
-  bind(container: Container, injectable: Injectable) {
+  bind(container: Container, injectable: InjectableClass) {
     container.bind(injectable[INJECTABLE_KEY]).to(injectable);
   }
 
-  get<T extends Injectable>(container: Container, injectable: T) {
+  get<T extends InjectableClass = InjectableClass>(
+    container: Container,
+    injectable: T
+  ) {
     return container.get<ConstructorReturnType<T>>(injectable[INJECTABLE_KEY]);
   }
 

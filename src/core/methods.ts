@@ -1,5 +1,5 @@
-import { IController, IMethod } from "./interface";
-import { metaDecorator } from "./metaDecorator";
+import { IHttpMethod } from "./interface/method.interface";
+import { metaMethodDecorator } from "./metaDecorator";
 
 export function Get(path?: string) {
   return Method("GET", path);
@@ -21,13 +21,13 @@ export function Delete(path?: string) {
   return Method("DELETE", path);
 }
 
-function Method(method: IMethod, path = "") {
+function Method(method: IHttpMethod, path = "") {
   return function (
     target: Record<string | symbol, any>,
     key: string,
     descriptor: PropertyDescriptor
   ) {
-    metaDecorator("method", method)(target, key, descriptor);
-    metaDecorator("url", path)(target, key, descriptor);
+    metaMethodDecorator("method", method)(target, key, descriptor);
+    metaMethodDecorator("path", path)(target, key, descriptor);
   };
 }

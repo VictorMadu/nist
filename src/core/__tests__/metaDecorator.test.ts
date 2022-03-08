@@ -1,5 +1,4 @@
 import { METADATA_KEY } from "../constant";
-import { IHandlerMetaData } from "../interface";
 import { metaDecorator } from "../metaDecorator";
 
 describe(`test for 'metaDecorator'`, () => {

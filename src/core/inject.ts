@@ -1,6 +1,6 @@
 import { inject } from "inversify";
 import { INJECTABLE_KEY } from "./constant";
-import { ConstructorReturnType } from "src/types";
+import { ConstructorReturnType } from "../types";
 import { Injectable } from "./injectable";
 import "reflect-metadata";
 

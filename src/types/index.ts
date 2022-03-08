@@ -42,7 +42,9 @@ export type PropListener<T> = {[K in StrKeys<T> as `on${Capitalize<K>}`]? : (...
 
 export type Prop<T> =`on${Capitalize<StrKeys<T>>}`
 
-export type FuncParams<T> = T extends (... args: infer O) => any ? O : never;
+export type FuncParams<T extends (...args: any[]) => any> = T extends (... args: infer O) => any ? O : never;
+
+export type FuncReturn<T extends (...args: any[]) => any> = T extends (... args: any[]) => infer O ? O : never;
 
 export type ArrType<T> = T extends [...args: infer O] ? O[number] : never;
 
@@ -51,13 +53,13 @@ export type FuncType<T extends Func> = Func<FuncParams<T>,ReturnType<T>>
 
 export type AddAsyncType<T extends Func> = Func<FuncParams<T>, Promise<ReturnType<T>>>
 
-export type Constructor<A extends any[] = any[], T extends any = any> = {
+export type Constructor<T extends any = any, A extends any[] = any[]> = {
     new (...args: A): T;
   };
 
-export type ConstructorParamsType<T> = T extends new (...args: infer O) => any ? O : never
+export type ConstructorParamsType<T extends abstract new (...args: any[]) => any> = T extends abstract new (...args: infer O) => any ? O : never
 
-export type ConstructorReturnType<T> = T extends new (...args: any[]) => infer O ? O : never;
+export type ConstructorReturnType<T extends abstract new (...args: any[]) => any> = T extends abstract new (...args: any[]) => infer O ? O : never;
 
 export type PromiseReturnType<T> = T extends Func<any[], Promise<infer O>> ? O : never; 
 

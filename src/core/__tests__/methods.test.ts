@@ -35,28 +35,28 @@ describe(`test for 'methods'`, () => {
       });
     });
 
-    describe(`test for 'url'`, () => {
+    describe(`test for 'path'`, () => {
       test(`should be '' when no path is passed (default value)`, () => {
-        expect(getSetUp()[METADATA_KEY].url).toBe("");
+        expect(getSetUp()[METADATA_KEY].path).toBe("");
       });
       test(`should be what 'path' is 1`, () => {
         const path = "";
-        expect(getSetUp(path)[METADATA_KEY].url).toBe(path);
+        expect(getSetUp(path)[METADATA_KEY].path).toBe(path);
       });
 
       test(`should be what 'path' is 2`, () => {
         const path = "/cats";
-        expect(getSetUp(path)[METADATA_KEY].url).toBe(path);
+        expect(getSetUp(path)[METADATA_KEY].path).toBe(path);
       });
 
       test(`should be what 'path' is 3`, () => {
         const path = "/cats/:id";
-        expect(getSetUp(path)[METADATA_KEY].url).toBe(path);
+        expect(getSetUp(path)[METADATA_KEY].path).toBe(path);
       });
 
       test(`should be what 'path' is 4`, () => {
         const path = "/cats/:id/posts";
-        expect(getSetUp(path)[METADATA_KEY].url).toBe(path);
+        expect(getSetUp(path)[METADATA_KEY].path).toBe(path);
       });
     });
   });
@@ -74,28 +74,28 @@ describe(`test for 'methods'`, () => {
       });
     });
 
-    describe(`test for 'url'`, () => {
+    describe(`test for 'path'`, () => {
       test(`should be '' when no path is passed (default value)`, () => {
-        expect(getSetUp()[METADATA_KEY].url).toBe("");
+        expect(getSetUp()[METADATA_KEY].path).toBe("");
       });
       test(`should be what 'path' is 1`, () => {
         const path = "";
-        expect(getSetUp(path)[METADATA_KEY].url).toBe(path);
+        expect(getSetUp(path)[METADATA_KEY].path).toBe(path);
       });
 
       test(`should be what 'path' is 2`, () => {
         const path = "/cats";
-        expect(getSetUp(path)[METADATA_KEY].url).toBe(path);
+        expect(getSetUp(path)[METADATA_KEY].path).toBe(path);
       });
 
       test(`should be what 'path' is 3`, () => {
         const path = "/cats/:id";
-        expect(getSetUp(path)[METADATA_KEY].url).toBe(path);
+        expect(getSetUp(path)[METADATA_KEY].path).toBe(path);
       });
 
       test(`should be what 'path' is 4`, () => {
         const path = "/cats/:id/posts";
-        expect(getSetUp(path)[METADATA_KEY].url).toBe(path);
+        expect(getSetUp(path)[METADATA_KEY].path).toBe(path);
       });
     });
   });
@@ -113,28 +113,28 @@ describe(`test for 'methods'`, () => {
       });
     });
 
-    describe(`test for 'url'`, () => {
+    describe(`test for 'path'`, () => {
       test(`should be '' when no path is passed (default value)`, () => {
-        expect(getSetUp()[METADATA_KEY].url).toBe("");
+        expect(getSetUp()[METADATA_KEY].path).toBe("");
       });
       test(`should be what 'path' is 1`, () => {
         const path = "";
-        expect(getSetUp(path)[METADATA_KEY].url).toBe(path);
+        expect(getSetUp(path)[METADATA_KEY].path).toBe(path);
       });
 
       test(`should be what 'path' is 2`, () => {
         const path = "/cats";
-        expect(getSetUp(path)[METADATA_KEY].url).toBe(path);
+        expect(getSetUp(path)[METADATA_KEY].path).toBe(path);
       });
 
       test(`should be what 'path' is 3`, () => {
         const path = "/cats/:id";
-        expect(getSetUp(path)[METADATA_KEY].url).toBe(path);
+        expect(getSetUp(path)[METADATA_KEY].path).toBe(path);
       });
 
       test(`should be what 'path' is 4`, () => {
         const path = "/cats/:id/posts";
-        expect(getSetUp(path)[METADATA_KEY].url).toBe(path);
+        expect(getSetUp(path)[METADATA_KEY].path).toBe(path);
       });
     });
   });
@@ -152,28 +152,28 @@ describe(`test for 'methods'`, () => {
       });
     });
 
-    describe(`test for 'url'`, () => {
+    describe(`test for 'path'`, () => {
       test(`should be '' when no path is passed (default value)`, () => {
-        expect(getSetUp()[METADATA_KEY].url).toBe("");
+        expect(getSetUp()[METADATA_KEY].path).toBe("");
       });
       test(`should be what 'path' is 1`, () => {
         const path = "";
-        expect(getSetUp(path)[METADATA_KEY].url).toBe(path);
+        expect(getSetUp(path)[METADATA_KEY].path).toBe(path);
       });
 
       test(`should be what 'path' is 2`, () => {
         const path = "/cats";
-        expect(getSetUp(path)[METADATA_KEY].url).toBe(path);
+        expect(getSetUp(path)[METADATA_KEY].path).toBe(path);
       });
 
       test(`should be what 'path' is 3`, () => {
         const path = "/cats/:id";
-        expect(getSetUp(path)[METADATA_KEY].url).toBe(path);
+        expect(getSetUp(path)[METADATA_KEY].path).toBe(path);
       });
 
       test(`should be what 'path' is 4`, () => {
         const path = "/cats/:id/posts";
-        expect(getSetUp(path)[METADATA_KEY].url).toBe(path);
+        expect(getSetUp(path)[METADATA_KEY].path).toBe(path);
       });
     });
   });
@@ -191,28 +191,28 @@ describe(`test for 'methods'`, () => {
       });
     });
 
-    describe(`test for 'url'`, () => {
+    describe(`test for 'path'`, () => {
       test(`should be '' when no path is passed (default value)`, () => {
-        expect(getSetUp()[METADATA_KEY].url).toBe("");
+        expect(getSetUp()[METADATA_KEY].path).toBe("");
       });
       test(`should be what 'path' is 1`, () => {
         const path = "";
-        expect(getSetUp(path)[METADATA_KEY].url).toBe(path);
+        expect(getSetUp(path)[METADATA_KEY].path).toBe(path);
       });
 
       test(`should be what 'path' is 2`, () => {
         const path = "/cats";
-        expect(getSetUp(path)[METADATA_KEY].url).toBe(path);
+        expect(getSetUp(path)[METADATA_KEY].path).toBe(path);
       });
 
       test(`should be what 'path' is 3`, () => {
         const path = "/cats/:id";
-        expect(getSetUp(path)[METADATA_KEY].url).toBe(path);
+        expect(getSetUp(path)[METADATA_KEY].path).toBe(path);
       });
 
       test(`should be what 'path' is 4`, () => {
         const path = "/cats/:id/posts";
-        expect(getSetUp(path)[METADATA_KEY].url).toBe(path);
+        expect(getSetUp(path)[METADATA_KEY].path).toBe(path);
       });
     });
   });

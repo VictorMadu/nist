@@ -3,17 +3,27 @@ import { ConstructorReturnType } from "../types";
 import { getAllClassMethodsName, throwError } from "../utils";
 import {
   IControllerDecoConstructor,
-  IControllerAdapter,
-  IHandlerMetaData,
   ILoader,
+  IControllerMetadata,
 } from "./interface";
 import { getFromMetaData, removeMetaData, setMetaData } from "./utils";
 import { Loader } from "./_loader";
+import { METADATA_KEY } from "./constant";
+import { IAdapter } from "./interface/adapter.interface";
+
+export type IAdapterT<
+  T extends IControllerDecoConstructor = IControllerDecoConstructor
+> = IAdapter<{
+  method: Pick<ConstructorReturnType<T>[string], typeof METADATA_KEY> & {
+    handler: Exclude<ConstructorReturnType<T>[string], "$METADATA">;
+  };
+  base: ConstructorReturnType<T>[typeof METADATA_KEY];
+}>;
 
 export class ControllerLoader<
   T extends IControllerDecoConstructor = IControllerDecoConstructor
-> extends Loader<T> implements ILoader<T, IControllerAdapter> {
-  constructor(private controllerAdapter: IControllerAdapter) {
+> extends Loader<T> implements ILoader<T, IAdapterT<T>> {
+  constructor(private controllerAdapter: IAdapterT<T>) {
     super();
   }
 
@@ -38,13 +48,13 @@ export class ControllerLoader<
     const handlerWithMetaData = controllerInstance[
       methodName
     ] as ConstructorReturnType<T>[string];
-    this.controllerAdapter.attachToRoute(
-      {
+    this.controllerAdapter.attach({
+      method: {
         ...getFromMetaData(handlerWithMetaData),
         handler: this.cleanHandler(handlerWithMetaData),
       },
-      { basePath: getFromMetaData(controllerInstance, "basePath") }
-    );
+      base: { ...getFromMetaData(controllerInstance) },
+    });
     return;
   }
 

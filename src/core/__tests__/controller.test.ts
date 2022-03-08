@@ -1,27 +1,26 @@
 import { ConstructorReturnType } from "../../types";
 import { INJECTABLE_KEY, METADATA_KEY } from "../constant";
-import { Controller, IReturnTypeControllerFn } from "../controller";
+import { HttpController, IReturnTypeControllerFn } from "../http-controller";
 import * as injectable from "../injectable";
 import { metaDecorator } from "../metaDecorator";
 import { Get, Post } from "../methods";
 import * as _ from "lodash";
+import {
+  IController,
+  IControllerClass,
+} from "../interface/controller.interface";
 
 const setUp1 = () => {
   class ControllerClass {}
-  const DecoratedControllerClass = Controller()(ControllerClass);
+  const DecoratedControllerClass = HttpController()(ControllerClass);
 
   return [ControllerClass, DecoratedControllerClass];
 };
 
-const setUp2 = (
-  path?: string
-): [
-  IReturnTypeControllerFn,
-  ConstructorReturnType<IReturnTypeControllerFn>
-] => {
-  @Controller(path)
+const setUp2 = (path?: string): [IControllerClass, IController] => {
+  @HttpController(path)
   class ControllerClass {}
-  const mControllerClass = new (ControllerClass as IReturnTypeControllerFn)();
+  const mControllerClass = new (ControllerClass as IControllerClass)();
 
   return [ControllerClass as IReturnTypeControllerFn, mControllerClass];
 };
@@ -45,7 +44,7 @@ const setUp3 = (
   const additionMethod1MetaValue = "additional";
   const additionMethod2MetaKey = "additional";
   const additionMethod2MetaValue = "additional";
-  @Controller(controllerPath)
+  @HttpController(controllerPath)
   class Controller1 {
     constructor() {}
 
@@ -105,7 +104,7 @@ describe(`test for controller`, () => {
     });
   });
 
-  describe(`test to check the props of 'Controller'`, () => {
+  describe(`test to check the props of 'HttpController'`, () => {
     describe(`test to check the 'INJECTABLE_KEY'`, () => {
       const [MControllerClass] = setUp2();
 
@@ -126,14 +125,14 @@ describe(`test for controller`, () => {
 
       test(`should have a correct value1`, () => {
         const [_, mControllerClass]: any = setUp2();
-        expect(mControllerClass[METADATA_KEY]).toEqual({ basePath: "" });
+        expect(mControllerClass[METADATA_KEY]).toEqual({ path: "" });
       });
 
       test(`should have a correct value2`, () => {
         const path = "";
         const [_, mControllerClass]: any = setUp2(path);
         expect(mControllerClass[METADATA_KEY]).toEqual({
-          basePath: path,
+          path: path,
         });
       });
 
@@ -141,7 +140,7 @@ describe(`test for controller`, () => {
         const path = "/cats";
         const [_, mControllerClass]: any = setUp2(path);
         expect(mControllerClass[METADATA_KEY]).toEqual({
-          basePath: path,
+          path: path,
         });
       });
 
@@ -149,7 +148,7 @@ describe(`test for controller`, () => {
         const path = "/cats/:id";
         const [_, mControllerClass]: any = setUp2(path);
         expect(mControllerClass[METADATA_KEY]).toEqual({
-          basePath: path,
+          path: path,
         });
       });
 
@@ -157,15 +156,15 @@ describe(`test for controller`, () => {
         const path = "/cats/:id/posts";
         const [_, mControllerClass]: any = setUp2(path);
         expect(mControllerClass[METADATA_KEY]).toEqual({
-          basePath: path,
+          path: path,
         });
       });
     });
   });
 
-  describe(`test for a fully constructed Controller Class`, () => {
+  describe(`test for a fully constructed HttpController Class`, () => {
     describe(`test for default behaviour`, () => {
-      let Controller: { new (...args: any[]): any };
+      let HttpController: { new (...args: any[]): any };
       let controller: any;
       let method1: string;
       let method2: string;
@@ -180,7 +179,7 @@ describe(`test for controller`, () => {
 
       beforeAll(() => {
         [
-          Controller,
+          HttpController,
           method1,
           method2,
           additionMethod1MetaKey,
@@ -189,10 +188,10 @@ describe(`test for controller`, () => {
           additionMethod2MetaValue,
         ] = setUp3(controllerPath, method1Path, method2Path);
 
-        controller = new Controller();
+        controller = new HttpController();
       });
-      test(`should 'Controller' be defined`, () => {
-        expect(Controller).toBeDefined();
+      test(`should 'HttpController' be defined`, () => {
+        expect(HttpController).toBeDefined();
       });
 
       test(`should 'method1' be defined`, () => {
@@ -223,15 +222,15 @@ describe(`test for controller`, () => {
             expect(controller[METADATA_KEY]).toBeDefined();
           });
           describe(`test for properties`, () => {
-            describe(`test for basePath`, () => {
+            describe(`test for path`, () => {
               test(`should be defined`, () => {
-                expect(controller[METADATA_KEY]).toHaveProperty("basePath");
+                expect(controller[METADATA_KEY]).toHaveProperty("path");
               });
               test(`should be of type string`, () => {
-                expect(typeof controller[METADATA_KEY].basePath).toBe("string");
+                expect(typeof controller[METADATA_KEY].path).toBe("string");
               });
               test(`should be of correct value`, () => {
-                expect(controller[METADATA_KEY].basePath).toBe("");
+                expect(controller[METADATA_KEY].path).toBe("");
               });
             });
           });
@@ -271,21 +270,21 @@ describe(`test for controller`, () => {
               expect(method).toBe("GET");
             });
           });
-          describe(`test for 'url`, () => {
-            let url: any;
+          describe(`test for 'path`, () => {
+            let path: any;
             beforeAll(() => {
-              url = handlerMetaData.url;
+              path = handlerMetaData.path;
             });
 
-            test(`should have prop 'url'`, () => {
-              expect(handlerMetaData).toHaveProperty("url");
+            test(`should have prop 'path'`, () => {
+              expect(handlerMetaData).toHaveProperty("path");
             });
 
             test(`should be defined`, () => {
-              expect(url).toBeDefined();
+              expect(path).toBeDefined();
             });
             test(`should be of correct value`, () => {
-              expect(url).toBe(controllerPath ?? "" + method1Path);
+              expect(path).toBe(controllerPath ?? "" + method1Path);
             });
           });
 
@@ -343,21 +342,21 @@ describe(`test for controller`, () => {
               expect(method).toBe("POST");
             });
           });
-          describe(`test for 'url`, () => {
-            let url: any;
+          describe(`test for 'path`, () => {
+            let path: any;
             beforeAll(() => {
-              url = handlerMetaData.url;
+              path = handlerMetaData.path;
             });
 
-            test(`should have prop 'url'`, () => {
-              expect(handlerMetaData).toHaveProperty("url");
+            test(`should have prop 'path'`, () => {
+              expect(handlerMetaData).toHaveProperty("path");
             });
 
             test(`should be defined`, () => {
-              expect(url).toBeDefined();
+              expect(path).toBeDefined();
             });
             test(`should be of correct value`, () => {
-              expect(url).toBe(controllerPath ?? "" + method2Path);
+              expect(path).toBe(controllerPath ?? "" + method2Path);
             });
           });
 

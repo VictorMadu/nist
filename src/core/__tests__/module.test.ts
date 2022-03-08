@@ -1,27 +1,24 @@
 import { Container } from "inversify";
-import { ContainerHelper } from "../../containerHelper";
+import { ContainerHelper } from "../containerHelper";
 import { ConstructorReturnType, Constructor } from "../../types";
 import { INJECTABLE_KEY } from "../constant";
-import { Controller } from "../controller";
+import { HttpController } from "../http-controller";
 import { Inject } from "../inject";
 import { Injectable } from "../injectable";
-import {
-  IServiceAdapter,
-  IControllerAdapter,
-  IService,
-  IModuleClass,
-  IModuleClassManager,
-  IModule,
-  ILoader,
-  IControllerDecoConstructor,
-  IServiceDecoConstructor,
-  Injectable as IInjectable,
-} from "../interface";
+import { IAdapter } from "../interface/adapter.interface";
+import { InjectableClass } from "../interface/injectable.interface";
+import { IModuleManagerClass } from "../interface/module-class-manager.interface";
+import { IModule } from "../interface/module.interface";
+import { IService } from "../interface/service.interface";
 import { Get, Post } from "../methods";
 import { IConfig, Module } from "../module";
+import { IController } from "../interface/controller.interface";
 
 // TODO: Check if manual garbage collection is faster
-const setUp1 = (): [Constructor, IModuleClassManager] => {
+const setUp1 = (): [
+  Constructor,
+  ConstructorReturnType<IModuleManagerClass>
+] => {
   class ModuleClass {}
   const config: IConfig = {
     imports: [],
@@ -34,13 +31,13 @@ const setUp1 = (): [Constructor, IModuleClassManager] => {
   return [ModuleClass, new ModuleClassMangaer()];
 };
 
-const setUp2 = (): [IServiceAdapter, IControllerAdapter] => {
+const setUp2 = (): [IAdapter<IService>, IAdapter<IController>] => {
   class ServiceAdapter {
-    attachLifeCycleListener(service: IService) {}
+    attach(service: IService) {}
   }
 
   class ControllerAdapter {
-    attachToRoute(routeConfig: {}, baseConfig: { basePath: string }) {}
+    attach(controller: IController) {}
   }
 
   return [new ServiceAdapter(), new ControllerAdapter()];
@@ -68,7 +65,7 @@ const setUp3 = (importModules: Constructor[] = []) => {
       return this.service2.sevice2Method() + "sevice3Method";
     }
   }
-  @Controller()
+  @HttpController()
   class Controller1 {
     constructor(@Inject(Service1) private service1: Service1) {}
 
@@ -78,7 +75,7 @@ const setUp3 = (importModules: Constructor[] = []) => {
     }
   }
 
-  @Controller()
+  @HttpController()
   class Controller2 {
     constructor(
       @Inject(Service1) private service1: Service1,
@@ -113,23 +110,19 @@ const setUp3 = (importModules: Constructor[] = []) => {
     Constructor,
     Constructor,
     Constructor,
-    { new (): IModuleClassManager }
+    IModuleManagerClass
   ];
 };
 
 describe(`test for 'Module'`, () => {
-  let serviceAdapter: IServiceAdapter;
-  let controllerAdapter: IControllerAdapter;
-
   let Controller1: Constructor;
   let Controller2: Constructor;
   let Service1: Constructor;
   let Service2: Constructor;
   let Service3: Constructor;
-  let AppModuleCreator: { new (): IModuleClassManager };
+  let AppModuleCreator: IModuleManagerClass;
 
   beforeAll(() => {
-    [serviceAdapter, controllerAdapter] = setUp2();
     [
       Controller1,
       Controller2,
@@ -182,7 +175,7 @@ describe(`test for 'Module'`, () => {
     let module: IModule;
 
     beforeAll(() => {
-      module = new AppModuleCreator().createModuleInstance();
+      module = new AppModuleCreator().getInstance();
     });
 
     test(`should be defined`, () => {
@@ -208,14 +201,8 @@ describe(`test for 'Module'`, () => {
       });
 
       describe("test for calls", () => {
-        let mockServiceLoader: ILoader<
-          IServiceDecoConstructor,
-          IServiceAdapter
-        >;
-        let mockControllerLoader: ILoader<
-          IControllerDecoConstructor,
-          IControllerAdapter
-        >;
+        let mockServiceAdapter: IAdapter<IService>;
+        let mockControllerAdapter: IAdapter<IController>;
 
         describe("test for behaviour on call", () => {
           let loaderSetUp: any;
@@ -223,15 +210,13 @@ describe(`test for 'Module'`, () => {
 
           beforeAll(() => {
             load = module.load.bind(module);
-            loaderSetUp = () => load(mockServiceLoader, mockControllerLoader);
-            mockServiceLoader = {
-              getInstance: jest.fn(),
-              load: jest.fn(),
+            mockServiceAdapter = {
+              attach: jest.fn(),
             };
-            mockControllerLoader = {
-              getInstance: jest.fn(),
-              load: jest.fn(),
+            mockControllerAdapter = {
+              attach: jest.fn(),
             };
+            loaderSetUp = () => load(mockServiceAdapter, mockControllerAdapter);
           });
 
           test(`should not throw`, () => {
@@ -249,9 +234,9 @@ describe(`test for 'Module'`, () => {
           let load: IModule["load"];
 
           beforeAll(() => {
-            module = new AppModuleCreator().createModuleInstance();
+            module = new AppModuleCreator().getInstance();
             load = module.load.bind(module);
-            exportContainer = load(mockServiceLoader, mockControllerLoader);
+            exportContainer = load(mockServiceAdapter, mockControllerAdapter);
           });
 
           test(`should be defined`, () => {
@@ -264,7 +249,7 @@ describe(`test for 'Module'`, () => {
 
           describe(`test for behaviour`, () => {
             let getInstance: any;
-            getInstance = (injectable: IInjectable) => {
+            getInstance = (injectable: InjectableClass) => {
               return new ContainerHelper().get(exportContainer, injectable);
             };
             describe(`test for get on 'Service1'`, () => {

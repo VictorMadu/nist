@@ -1,28 +1,27 @@
 import { Container } from "inversify";
-import {
-  IControllerAdapter,
-  IModuleClass,
-  IModuleClassManager,
-  IServiceAdapter,
-} from "./interface";
+import { IModuleManagerClass } from "./interface/module-class-manager.interface";
+import { IModuleClass } from "./interface/module.interface";
 
 export function ModuleClassManagerMixin<T extends IModuleClass = any>(
   ModuleClass: T
-): { new (): IModuleClassManager } {
-  return class {
-    private exportContainer: Container | undefined;
+): IModuleManagerClass {
+  class ModuleManager {
+    private static exportContainer: Container | undefined;
+    private module = new ModuleClass();
     constructor() {}
 
-    createModuleInstance() {
-      return new ModuleClass();
+    getInstance() {
+      return this.module;
     }
 
-    setExportContainer(container: Container) {
-      this.exportContainer = container;
+    static setExportContainer(container: Container) {
+      ModuleManager.exportContainer = container;
     }
 
-    getExportContainer() {
-      return this.exportContainer;
+    static getExportContainer() {
+      return ModuleManager.exportContainer;
     }
-  };
+  }
+
+  return ModuleManager;
 }

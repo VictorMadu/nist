@@ -3,7 +3,7 @@
     "module": "commonjs",
     // "types": ["reflect-metadata"],
     // "lib": ["es7"],
-    // "moduleResolution": "node",
+    "moduleResolution": "node",
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
@@ -12,7 +12,11 @@
     "target": "es2017",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./",
+    "baseUrl": "./src",
+    // "baseUrl": "src/",
+    "paths": {
+      "src": ["src"] // This mapping is relative to "baseUrl"
+    },
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
