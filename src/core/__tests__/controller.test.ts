@@ -2,8 +2,8 @@ import { ConstructorReturnType } from "../../types";
 import { INJECTABLE_KEY, METADATA_KEY } from "../constant";
 import { HttpController, IReturnTypeControllerFn } from "../http-controller";
 import * as injectable from "../injectable";
-import { metaDecorator } from "../metaDecorator";
-import { Get, Post } from "../methods";
+import { metaMethodDecorator } from "../metaDecorator";
+import { Get, Post } from "../methods-decorators";
 import * as _ from "lodash";
 import {
   IController,
@@ -48,13 +48,19 @@ const setUp3 = (
   class Controller1 {
     constructor() {}
 
-    @((metaDecorator as any)(additionMethod1MetaKey, additionMethod1MetaValue))
+    @((metaMethodDecorator as any)(
+      additionMethod1MetaKey,
+      additionMethod1MetaValue
+    ))
     @Get(method1Path)
     [method1]() {
       return "method1";
     }
 
-    @((metaDecorator as any)(additionMethod2MetaKey, additionMethod2MetaValue))
+    @((metaMethodDecorator as any)(
+      additionMethod2MetaKey,
+      additionMethod2MetaValue
+    ))
     @Post(method2Path)
     [method2]() {
       return "method1";

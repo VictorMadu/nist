@@ -96,7 +96,6 @@ export function Module(config: IConfig) {
         serviceAdapter: IAdapter<IService>,
         controllerAdapter: IAdapter<IController>
       ) {
-        console.log("moduleManager", getAllClassMethodsName(ModuleManager));
         if (!ModuleManager.getExportContainer()) {
           const moduleInstance = new ModuleManager().getInstance();
           ModuleManager.setExportContainer(

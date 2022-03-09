@@ -1,11 +1,8 @@
 import { FastifyInstance } from "fastify";
 import * as _ from "lodash";
+import { getFromMetaData, getMethodParamsMetaData } from "../core/utils";
 import { CONTROLLER_KEY } from "../core";
 import { HTTP_CONTROLLER_KEY, METADATA_KEY } from "../core/constant";
-import {
-  getControllerMetadata,
-  getControllerMethodMetadata,
-} from "../core/controller-adapter-utils";
 import { IController } from "../core/interface/controller.interface";
 import { getAllClassMethodsName } from "../utils";
 import { HttpHandlerUtils } from "./http-handler-args";
@@ -15,7 +12,6 @@ import {
   IHandlerMetaData,
   IHttpController,
 } from "./interface/controller-adapter.interface";
-import { getMetadata } from "./util";
 
 export default class ControllerAdapter implements IControllerAdapter {
   private httpAdapter: HttpAttacher;
@@ -38,13 +34,12 @@ class HttpAttacher {
   constructor(private fastifyInstance: FastifyInstance) {}
 
   attach(controller: IHttpController, methodName: string) {
-    const method = controller[methodName].bind(controller);
-    const methodMetadata = getControllerMethodMetadata(
-      controller,
-      methodName
+    const method = controller[methodName];
+    const methodMetadata = getFromMetaData(
+      method
     ) as IHttpController[string][typeof METADATA_KEY];
 
-    const baseMetadata = getControllerMetadata(controller) as { path: string };
+    const baseMetadata = getFromMetaData(controller as any) as { path: string };
 
     this.fastifyInstance.route({
       ...methodMetadata,

@@ -10,7 +10,7 @@ import { InjectableClass } from "../interface/injectable.interface";
 import { IModuleManagerClass } from "../interface/module-class-manager.interface";
 import { IModule } from "../interface/module.interface";
 import { IService } from "../interface/service.interface";
-import { Get, Post } from "../methods";
+import { Get, Post } from "../methods-decorators";
 import { IConfig, Module } from "../module";
 import { IController } from "../interface/controller.interface";
 

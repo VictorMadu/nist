@@ -1,5 +1,5 @@
 import { METADATA_KEY } from "../constant";
-import { Delete, Get, Patch, Post, Put } from "../methods";
+import { Delete, Get, Patch, Post, Put } from "../methods-decorators";
 
 type IPath = string | undefined;
 type IReturnMethodDeco = (

@@ -1,1 +1,1 @@
-import "./example/fastify";
+import "./examples/fastify";

@@ -6,32 +6,36 @@ import { IMetadata, IParamsMetadata } from "./interface/utils.interface";
 
 export function getFromMetaData(obj: IMetadata, key?: string) {
   const objMetadata = obj[METADATA_KEY];
-  return _.isUndefined(key) ? objMetadata : _.get(objMetadata, key);
+  return key ? _.get(objMetadata, key) : objMetadata;
 }
 
 export function setMetaData(obj: object, key: string, value: any): IMetadata {
   const setKey = `${METADATA_KEY}.${key}`;
-  return _.set(obj, setKey, value) as IMetadata;
+  const d = _.set(obj, setKey, value) as IMetadata;
+  return d;
 }
 
 export function removeMetaData(obj: object): IMetadata {
   return _.set(obj, METADATA_KEY, undefined) as IMetadata;
 }
 
-export function getMethodParamsMetaData(obj: IParamsMetadata, key?: string) {
-  let objKey = key
-    ? CONTROLLER_METHOD_PARAMS_KEY + "." + key
-    : CONTROLLER_METHOD_PARAMS_KEY;
-
-  return getFromMetaData(obj, objKey);
+export function getMethodParamsMetaData<T extends any[] = any[]>(
+  obj: IParamsMetadata
+) {
+  return getFromMetaData(obj, CONTROLLER_METHOD_PARAMS_KEY) as Record<
+    number,
+    {
+      type: string | symbol;
+      args: T;
+    }
+  >;
 }
 
 export function setMethodParamsMetaData(
   obj: object,
   index: number,
-  key: string,
   value: any
 ) {
-  const setKey = `${CONTROLLER_METHOD_PARAMS_KEY}.${[index]}.${key}`;
+  const setKey = `${CONTROLLER_METHOD_PARAMS_KEY}.${[index]}`;
   return setMetaData(obj, setKey, value);
 }

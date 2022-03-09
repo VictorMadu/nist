@@ -4,7 +4,7 @@ import { setMetaData, setMethodParamsMetaData } from "./utils";
 
 export function metaMethodDecorator(metaKey: string, metaValue: any) {
   return function (
-    target: { [method: string | symbol]: IMetadata },
+    target: { [method: string | symbol]: IMetadata } | any,
     key: string,
     descriptor: PropertyDescriptor
   ) {
@@ -12,12 +12,15 @@ export function metaMethodDecorator(metaKey: string, metaValue: any) {
   };
 }
 
-export function metaParamDecorator(metaKey: string, metaValue: any) {
+export function metaParamDecorator(type: string, args?: any[]) {
   return function (
     target: { [method: string | symbol]: IParamsMetadata },
     key: string | symbol,
     index: number
   ) {
-    setMethodParamsMetaData(target[key], index, metaKey, metaValue);
+    setMethodParamsMetaData(target[key], index, {
+      type,
+      args,
+    });
   };
 }

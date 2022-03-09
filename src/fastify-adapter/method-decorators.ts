@@ -1,50 +1,50 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { metaDecorator } from "../core/metaDecorator";
+import { metaMethodDecorator } from "../core/metaDecorator";
 
 export function OnRequest(
   fns: ((req: FastifyRequest, rep: FastifyReply) => void)[]
 ) {
-  return metaDecorator("onRequest", fns);
+  return metaMethodDecorator("onRequest", fns);
 }
 
 export function PreParsing(
   fns: ((req: FastifyRequest, rep: FastifyReply) => void)[]
 ) {
-  return metaDecorator("preParsing", fns);
+  return metaMethodDecorator("preParsing", fns);
 }
 
 export function PreValidation(
   fns: ((req: FastifyRequest, rep: FastifyReply) => void)[]
 ) {
-  return metaDecorator("preValidation", fns);
+  return metaMethodDecorator("preValidation", fns);
 }
 
 export function PreHandler(
   fns: ((req: FastifyRequest, rep: FastifyReply) => void)[]
 ) {
-  return metaDecorator("preHandler", fns);
+  return metaMethodDecorator("preHandler", fns);
 }
 
 export function PreSerialization(
   fns: ((req: FastifyRequest, rep: FastifyReply) => void)[]
 ) {
-  return metaDecorator("preSerialization", fns);
+  return metaMethodDecorator("preSerialization", fns);
 }
 
 export function OnError(
   fns: ((req: FastifyRequest, rep: FastifyReply) => void)[]
 ) {
-  return metaDecorator("onError", fns);
+  return metaMethodDecorator("onError", fns);
 }
 
 export function OnResponse(
   fns: ((req: FastifyRequest, rep: FastifyReply) => void)[]
 ) {
-  return metaDecorator("onResponse", fns);
+  return metaMethodDecorator("onResponse", fns);
 }
 
 export function OnTimeout(
   fns: ((req: FastifyRequest, rep: FastifyReply) => void)[]
 ) {
-  return metaDecorator("onTimeout", fns);
+  return metaMethodDecorator("onTimeout", fns);
 }

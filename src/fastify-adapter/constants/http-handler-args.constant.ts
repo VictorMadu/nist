@@ -1,7 +1,8 @@
 export const ARG_TYPES = {
-  body: "$BODY" as string | symbol,
-  params: "$PARAM" as string | symbol,
-  query: "$QUERY" as string | symbol,
-  data: "$DATA" as string | symbol,
-  props: "$PROP" as string | symbol,
+  body: "$BODY" as string,
+  params: "$PARAM" as string,
+  query: "$QUERY" as string,
+  data: "$DATA" as string,
+  props: "$PROP" as string,
+  res: "$RES" as string,
 };
