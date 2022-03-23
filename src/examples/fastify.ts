@@ -29,8 +29,35 @@ import {
 } from "../fastify-adapter/interface/http-handler-args.interface";
 import { OnRequest } from "../fastify-adapter/method-decorators";
 import { setReqOrRepData } from "../fastify-adapter/data-manager";
+import * as fs from "fs";
+import * as path from "path";
+import * as yaml from "js-yaml";
+import corsPlugin from "fastify-cors";
+import { WebSocketServer } from "ws";
 
-const fastify = Fastify();
+const configFile = fs.readFileSync(
+  path.join(
+    process.cwd(),
+    process.env.NODE_ENV === "test" ? "config.test.yaml" : "config.yaml"
+  ),
+  { encoding: "utf-8" }
+);
+
+const yamlLoadedConfigFile = yaml.load(configFile) as Record<string, any>;
+
+const KEY = fs.readFileSync(
+  path.join(_.get(yamlLoadedConfigFile, "app.key") as string)
+);
+const CERT = fs.readFileSync(
+  path.join(_.get(yamlLoadedConfigFile, "app.cert") as string)
+);
+
+const fastify = Fastify({
+  // https: {
+  //   key: KEY,
+  //   cert: CERT,
+  // },
+});
 
 fastify.ready(() => {
   console.log("\nPrinting the plugins");
@@ -139,6 +166,28 @@ const appBootstrapper = new AppBootstrapper(
 
 appBootstrapper.start(AppModule);
 appBootstrapper.emitReady();
+
+const wss = new WebSocketServer({ server: fastify.server });
+
+wss.on("connection", function connection(ws) {
+  // ws.close();
+  ws.on("message", function message(data) {
+    console.log("received: %s", data);
+  });
+
+  const isBinary = true;
+  const data = JSON.stringify({ data: "data" });
+  ws.send(data, { binary: isBinary });
+});
+
+fastify.register(corsPlugin, {
+  origin: (origin, cb) => {
+    console.log("\n\nOrigin", origin);
+    if (/.*?/.test(origin)) return cb(null, true);
+    return cb(null, true);
+    // return cb(new Error("Not allowed"), false);
+  },
+});
 
 fastify.listen(8080, "127.0.0.1", (err, address) => {
   if (err) {
