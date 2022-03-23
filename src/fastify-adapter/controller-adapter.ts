@@ -33,7 +33,7 @@ class HttpAttacher {
   private httpHandlerUtils = new HttpHandlerUtils();
   constructor(private fastifyInstance: FastifyInstance) {}
 
-  attach(controller: IHttpController, methodName: string) {
+  attach(controller: IHttpController, methodName: string | symbol) {
     const method = controller[methodName];
     const methodMetadata = getFromMetaData(
       method

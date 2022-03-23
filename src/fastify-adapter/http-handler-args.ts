@@ -20,7 +20,7 @@ export class HttpHandlerUtils {
 
   getHandler(
     controller: IHttpController,
-    methodName: string
+    methodName: string | symbol
   ): (req: FastifyRequest, rep: FastifyReply) => void {
     const method = controller[methodName];
     const methodParamsMetadata = getMethodParamsMetaData(method as any);

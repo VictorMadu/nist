@@ -10,7 +10,7 @@ import { IHttpMethod } from "../../core/interface/method.interface";
 export interface IControllerAdapter extends IAdapter<IController> {}
 
 export interface IHttpController {
-  [key: string]: {
+  [key: string | symbol]: {
     (...args: any[]): void | Promise<Record<string, any>>;
     [METADATA_KEY]: IHandlerMetaData;
   };
