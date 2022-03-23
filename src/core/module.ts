@@ -39,6 +39,7 @@ export function Module(config: IConfig) {
 
       constructor() {
         super();
+        this.setDefaultConfig(config);
         this.containerHelper = new ContainerHelper();
         this.localContainer = this.containerHelper.createContainer();
         this.exportContainer = this.containerHelper.createContainer();
@@ -76,6 +77,13 @@ export function Module(config: IConfig) {
         attachToAdapterPartialFn(config.controllers, controllerAdapter);
 
         return this.exportContainer;
+      }
+
+      private setDefaultConfig(config: IConfig) {
+        config.imports = config.imports ?? [];
+        config.services = config.services ?? [];
+        config.controllers = config.controllers ?? [];
+        config.exports = config.exports ?? [];
       }
 
       private getImportContainers(
