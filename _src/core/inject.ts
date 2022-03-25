@@ -1,12 +1,18 @@
 import { inject } from "inversify";
 import "reflect-metadata";
+import { Constructor } from "../types";
 import { InjectableStore } from "./injectable-store";
+import {
+  IIndexOrPropertyDescriptor,
+  IMethodName,
+  ITarget,
+} from "./interface/inject.interface";
 
-export function Inject(Injectable: { new (...args: any[]): any }) {
+export function Inject(Injectable: Constructor) {
   return function (
-    Target: { new (...args: any[]): Record<string | symbol, Function> },
-    methodName: string | symbol,
-    indexOrPropertyDescriptor: number | PropertyDescriptor
+    Target: ITarget,
+    methodName: IMethodName,
+    indexOrPropertyDescriptor: IIndexOrPropertyDescriptor
   ) {
     return inject(InjectableStore.getInjectableHandler(Injectable)!.getKey())(
       Target,

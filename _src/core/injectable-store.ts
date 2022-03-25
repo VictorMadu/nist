@@ -1,14 +1,15 @@
 import { IInjectableHandler } from "./interface/injectable-handler.interface";
 import InjectableHandler from "./injectable-handler";
+import { Constructor } from "../types";
 
 // Storing all injectable together and creates a handler for each one of them;
 export class InjectableStore {
   private static injectableHandlers = new Map<
-    new (...args: any[]) => any,
+    Constructor,
     IInjectableHandler
   >();
 
-  static store(Injectable: { new (...args: any[]): any }) {
+  static store(Injectable: Constructor) {
     if (!this.injectableHandlers.has(Injectable))
       this.injectableHandlers.set(Injectable, new InjectableHandler());
     return this;
@@ -20,3 +21,5 @@ export class InjectableStore {
     return this.injectableHandlers.get(Injectable);
   }
 }
+
+export default InjectableStore;

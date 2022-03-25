@@ -1,9 +1,8 @@
 import { Container } from "inversify";
 import * as _ from "lodash";
-import { ConstructorReturnType } from "types";
+import { Constructor, ConstructorReturnType } from "../types";
 import { InjectableStore } from "./injectable-store";
 import {
-  Constructor,
   IConfig,
   IModuleDeco,
   IModuleDecoConstructor,
@@ -102,3 +101,5 @@ export function Module({
     };
   };
 }
+
+export default Module;

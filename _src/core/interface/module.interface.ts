@@ -21,5 +21,3 @@ export interface IConfig {
   services: { new (...args: any[]): any }[];
   exports: { new (...args: any[]): any }[];
 }
-
-export type Constructor = new (...args: any[]) => any;
