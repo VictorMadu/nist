@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { IStartListeners } from "src/fastify-adapter/interface/service-adapter.interface";
-import { ExactlyOrWithPromise } from "src/types";
+import { IStartListeners } from "../../fastify-adapter/interface/service-adapter.interface";
+import { ExactlyOrWithPromise } from "../../types";
 import { INJECTABLE_KEY } from "../constant";
 import { IBaseClass, IBase, InjectableClass } from "./injectable.interface";
 import { IAnyMethod } from "./interface";

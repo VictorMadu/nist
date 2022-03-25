@@ -6,6 +6,7 @@ import { IController } from "./interface/controller.interface";
 import { IModuleManagerClass } from "./interface/module-class-manager.interface";
 import { IModule } from "./interface/module.interface";
 import { IService } from "./interface/service.interface";
+import { WebSocket, WebSocketServer } from "ws";
 
 export class AppBootstrapper {
   constructor(
@@ -18,6 +19,14 @@ export class AppBootstrapper {
     new (AppModule as IModuleManagerClass)()
       .getInstance()
       .load(this.serviceAdapter, this.controllerAdapter);
+  }
+
+  handleWsMessage(
+    wss: WebSocketServer,
+    ws: WebSocket,
+    data: { type: string; payload: any }
+  ) {
+    this.controllerAdapter.handleWsMessage(wss, ws, data);
   }
 
   emitReady() {

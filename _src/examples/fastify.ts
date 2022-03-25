@@ -3,39 +3,34 @@ import Fastify, {
   FastifyReply,
   FastifyRequest,
 } from "fastify";
+import * as fs from "fs";
+import * as path from "path";
+import * as yaml from "js-yaml";
+import corsPlugin from "fastify-cors";
+import { WebSocketServer } from "ws";
+import ControllerAdapter, {
+  HttpController,
+  WsController,
+} from "../fastify-adapter/controller-adapter";
+import { Injectable } from "../core/injectable";
+import { Inject } from "../core/inject";
 import {
   Get,
-  HttpController,
-  Inject,
-  Injectable,
-  Module,
+  OnRequest,
   Post,
   Put,
   SubType,
-} from "../core";
-import { AppBootstrapper } from "../core/app-bootstrapper";
-import { IModule } from "../core/interface/module.interface";
-import ControllerAdapter from "../fastify-adapter/controller-adapter";
-import { ServiceAdapter } from "../fastify-adapter/service-adapter";
-import * as _ from "lodash";
+} from "../fastify-adapter/methods-decorators";
 import {
   Body,
   Params,
   Rep,
   RepData,
 } from "../fastify-adapter/param-decorators";
-import {
-  IParams,
-  IRep,
-} from "../fastify-adapter/interface/http-handler-args.interface";
-import { OnRequest } from "../fastify-adapter/method-decorators";
-import { setReqOrRepData } from "../fastify-adapter/data-manager";
-import * as fs from "fs";
-import * as path from "path";
-import * as yaml from "js-yaml";
-import corsPlugin from "fastify-cors";
-import { WebSocketServer } from "ws";
-import { WsController } from "core/http-controller";
+import { Module } from "../core/module";
+import { ServiceAdapter } from "../fastify-adapter/service-adapter";
+import { AppBootstrap } from "../fastify-adapter/bootstrap";
+import * as _ from "lodash";
 
 const configFile = fs.readFileSync(
   path.join(
@@ -98,15 +93,12 @@ class ServiceOne {
 @HttpController("")
 class User {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
-  @OnRequest([
-    async (req: FastifyRequest, rep: FastifyReply) => {
-      setReqOrRepData(rep, "f", "f");
-    },
-  ])
+
+  @OnRequest([async (req: FastifyRequest, rep: FastifyReply) => {}])
   @Get("")
   getText(
-    @Params() params: IParams,
-    @Rep() rep: IRep,
+    @Params() params: any,
+    @Rep() rep: any,
     @RepData() repData: { f: string }
   ) {
     rep
@@ -119,7 +111,7 @@ class User {
 class Feed {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
   @Post()
-  getText(@Body() body: {}, @Rep() rep: IRep) {
+  getText(@Body() body: any, @Rep() rep: any) {
     rep
       .code(200)
       .send("with path '/feed' " + this.serviceOne.callMe() + " " + rep);
@@ -130,7 +122,7 @@ class Feed {
 class Cat {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
   @Put()
-  getText(@Body() body: {}, @Rep() rep: IRep) {
+  getText(@Body() body: any, @Rep() rep: any) {
     rep
       .code(200)
       .send("with path '/feed' " + this.serviceOne.callMe() + " " + rep);
@@ -171,21 +163,21 @@ class UserModule {}
 })
 class AppModule {}
 
-const appBootstrapper = new AppBootstrapper(
+const appBootstrapper = new AppBootstrap(
   new ServiceAdapter(fastify),
   new ControllerAdapter(fastify)
 );
 
-appBootstrapper.start(AppModule);
+appBootstrapper.start(AppModule as any);
 appBootstrapper.emitReady();
 
 const wss = new WebSocketServer({ server: fastify.server });
 
 wss.on("connection", function connection(ws) {
   // ws.close();
-  ws.on("message", function message(data: { type: string; payload: any }) {
-    console.log("received: %s", data);
-    appBootstrapper.handleWsMessage(wss, ws, data);
+  ws.on("message", function message(payload: { type: string; data: any }) {
+    console.log("received: %s", payload);
+    appBootstrapper.handleWsMessage(wss, ws, payload);
   });
 
   const isBinary = true;

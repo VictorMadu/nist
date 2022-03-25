@@ -31,3 +31,14 @@ function Method(method: IHttpMethod, path = "") {
     metaMethodDecorator("path", path)(target, key, descriptor);
   };
 }
+
+// FOR WS
+export function SubType(type?: string) {
+  return function (
+    target: Record<string | symbol, any>,
+    key: string,
+    descriptor: PropertyDescriptor
+  ) {
+    metaMethodDecorator("subType", type)(target, key, descriptor);
+  };
+}

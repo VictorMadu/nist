@@ -4,6 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "r": "ts-node ./_src/examples/index.ts",
     "start": "yarn build && node dist/index.js",
     "build": "rimraf ./dist && tsc -p tsconfig.json",
     "dev": "nodemon --config nodemon.json",

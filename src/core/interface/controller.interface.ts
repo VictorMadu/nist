@@ -5,7 +5,7 @@ import {
   Func,
   FuncParams,
   FuncReturn,
-} from "src/types";
+} from "../../types";
 import { CONTROLLER_KEY, METADATA_KEY } from "../constant";
 import { IBaseClass, InjectableClass } from "./injectable.interface";
 
