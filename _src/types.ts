@@ -1,3 +1,5 @@
+// TODO: Publish and open the ts-types, install as dependency and remove this file.
+
 export type Func<R extends any = any, A extends any[] = any[]> = (...args: A) => R;
 export type VoidFunc<T extends any[] = any[]> = Func<void, T>;
 
