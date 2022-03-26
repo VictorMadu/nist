@@ -1,14 +1,23 @@
 import { Container } from "inversify";
-import { Constructor } from "src/types";
-import { IAdapter } from "./adapter.interface";
-import { IController } from "./controller.interface";
-import { IService } from "./service.interface";
 
-export type IModule = {
-  load: (
-    serviceAdapter: IAdapter<IService>,
-    controllerAdapter: IAdapter<IController>
-  ) => Container;
-};
+export interface IModuleDeco {
+  load(
+    serviceAdapter: {
+      attach: (serviceInstance: Record<string | symbol, Function>) => void;
+    },
+    controllerAdapter: {
+      attach: (controllerInstance: Record<string | symbol, Function>) => void;
+    }
+  ): Container;
 
-export type IModuleClass = Constructor<IModule, never>;
+  getExportContainer(): Container;
+}
+
+export type IModuleDecoConstructor = { new (): IModuleDeco };
+
+export interface IConfig {
+  imports: { new (...args: any[]): any }[];
+  controllers: { new (...args: any[]): any }[];
+  services: { new (...args: any[]): any }[];
+  exports: { new (...args: any[]): any }[];
+}

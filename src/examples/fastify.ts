@@ -3,39 +3,29 @@ import Fastify, {
   FastifyReply,
   FastifyRequest,
 } from "fastify";
-import {
-  Get,
-  HttpController,
-  Inject,
-  Injectable,
-  Module,
-  Post,
-  Put,
-  SubType,
-} from "../core";
-import { AppBootstrapper } from "../core/app-bootstrapper";
-import { IModule } from "../core/interface/module.interface";
-import ControllerAdapter from "../fastify-adapter/controller-adapter";
-import { ServiceAdapter } from "../fastify-adapter/service-adapter";
-import * as _ from "lodash";
-import {
-  Body,
-  Params,
-  Rep,
-  RepData,
-} from "../fastify-adapter/param-decorators";
-import {
-  IParams,
-  IRep,
-} from "../fastify-adapter/interface/http-handler-args.interface";
-import { OnRequest } from "../fastify-adapter/method-decorators";
-import { setReqOrRepData } from "../fastify-adapter/data-manager";
+import { Buffer } from "buffer";
 import * as fs from "fs";
 import * as path from "path";
 import * as yaml from "js-yaml";
+import * as _ from "lodash";
 import corsPlugin from "fastify-cors";
 import { WebSocketServer } from "ws";
-import { WsController } from "core/http-controller";
+import { Injectable } from "../core/injectable";
+import { Inject } from "../core/inject";
+import { Module } from "../core/module";
+import { ServiceAdapter, ControllerAdapter } from "../fastify-adapter";
+import { AppBootstrap } from "../fastify-adapter/bootstrap";
+import {
+  MethodDecos as HttpMethods,
+  ParamDecos as HttpParams,
+} from "../fastify-adapter/http";
+import {
+  HttpController,
+  MethodDecos as WsMethods,
+  ParamDecos as WsParams,
+} from "../fastify-adapter/ws";
+import { WsController } from "../fastify-adapter/ws/ws.controller";
+import { IPayload } from "../fastify-adapter/interfaces/controller.adapter.interfaces";
 
 const configFile = fs.readFileSync(
   path.join(
@@ -98,16 +88,13 @@ class ServiceOne {
 @HttpController("")
 class User {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
-  @OnRequest([
-    async (req: FastifyRequest, rep: FastifyReply) => {
-      setReqOrRepData(rep, "f", "f");
-    },
-  ])
-  @Get("")
+
+  @HttpMethods.OnRequest([async (req: FastifyRequest, rep: FastifyReply) => {}])
+  @HttpMethods.Get("")
   getText(
-    @Params() params: IParams,
-    @Rep() rep: IRep,
-    @RepData() repData: { f: string }
+    @HttpParams.Params() params: any,
+    @HttpParams.Rep() rep: any,
+    @HttpParams.RepData() repData: { f: string }
   ) {
     rep
       .code(200)
@@ -118,8 +105,8 @@ class User {
 @HttpController("/feed")
 class Feed {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
-  @Post()
-  getText(@Body() body: {}, @Rep() rep: IRep) {
+  @HttpMethods.Post()
+  getText(@HttpParams.Body() body: any, @HttpParams.Rep() rep: any) {
     rep
       .code(200)
       .send("with path '/feed' " + this.serviceOne.callMe() + " " + rep);
@@ -129,27 +116,35 @@ class Feed {
 @HttpController("/cat")
 class Cat {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
-  @Put()
-  getText(@Body() body: {}, @Rep() rep: IRep) {
+  @HttpMethods.Put()
+  getText(
+    @HttpParams.Body() body: any,
+    @HttpParams.Rep() rep: FastifyReply,
+    @HttpParams.Req() req: FastifyRequest
+  ) {
     rep
       .code(200)
       .send("with path '/feed' " + this.serviceOne.callMe() + " " + rep);
   }
 }
 
-@WsController(":cat")
+@WsController("cat")
 class CatWatcher {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
 
-  @SubType(":change")
-  handleCatChange(data: any, isBinary: boolean) {
-    return { data, fromServiceOne: this.serviceOne.callMe() }; // to the ws.send()
+  @WsMethods.SubType(":change")
+  handleCatChange(@WsParams.Data() data: any) {
+    console.log("cat watcher data", data);
+    return {
+      type: "cat:change",
+      data: { data: data, fromServiceOne: this.serviceOne.callMe() },
+    }; // to the ws.send()
   }
 }
 
 @Module({
   imports: [],
-  controllers: [Cat],
+  controllers: [Cat, CatWatcher],
   services: [ServiceOne],
   exports: [ServiceOne],
 })
@@ -171,26 +166,25 @@ class UserModule {}
 })
 class AppModule {}
 
-const appBootstrapper = new AppBootstrapper(
+const appBootstrapper = new AppBootstrap(
   new ServiceAdapter(fastify),
   new ControllerAdapter(fastify)
 );
 
-appBootstrapper.start(AppModule);
+appBootstrapper.start(AppModule as any);
 appBootstrapper.emitReady();
 
 const wss = new WebSocketServer({ server: fastify.server });
 
-wss.on("connection", function connection(ws) {
+wss.on("connection", function connection(ws, req) {
   // ws.close();
-  ws.on("message", function message(data: { type: string; payload: any }) {
-    console.log("received: %s", data);
-    appBootstrapper.handleWsMessage(wss, ws, data);
+  ws.on("message", function message(payload: string | Buffer, isBinary) {
+    if (isBinary === true) payload = (payload as Buffer).toString("binary");
+    const parsedPayload = JSON.parse(payload as string) as IPayload;
+    appBootstrapper.handleWsMessage(wss, ws, req, parsedPayload);
   });
-
-  const isBinary = true;
-  const data = JSON.stringify({ data: "data" });
-  ws.send(data, { binary: isBinary });
+  // const data = Buffer.from(JSON.stringify({ data: "data" }), "binary");
+  // ws.send(data);
 });
 
 fastify.register(corsPlugin, {

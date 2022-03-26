@@ -1,32 +1,25 @@
 import { inject } from "inversify";
-import { INJECTABLE_KEY } from "./constant";
-import { ConstructorReturnType } from "../types";
-import { Injectable } from "./injectable";
 import "reflect-metadata";
+import { Constructor } from "../types";
+import { InjectableStore } from "./injectable-store";
+import {
+  IIndexOrPropertyDescriptor,
+  IMethodName,
+  ITarget,
+} from "./interface/inject.interface";
 
-type IInjectableClass = {
-  new (...args: any[]): any;
-  [INJECTABLE_KEY]: symbol;
-};
-
-export function Inject<T extends { new (...args: any[]): any }>(
-  InjectableClass: T
-) {
+export function Inject(Injectable: Constructor) {
   return function (
-    target: ConstructorReturnType<T>,
-    targetKey: string,
-    indexOrPropertyDescriptor: number | PropertyDescriptor
+    Target: ITarget,
+    methodName: IMethodName,
+    indexOrPropertyDescriptor: IIndexOrPropertyDescriptor
   ) {
-    return inject(
-      ((InjectableClass as any) as IInjectableClass)[INJECTABLE_KEY]
-    )(target, targetKey, indexOrPropertyDescriptor);
+    return inject(InjectableStore.getInjectableHandler(Injectable)!.getKey())(
+      Target,
+      methodName,
+      indexOrPropertyDescriptor
+    );
   };
 }
 
-// @Injectable()
-// class Me {}
-
-// @Injectable()
-// class Mee {
-//   constructor(@Inject(Me) private me: Me) {}
-// }
+export default Inject;

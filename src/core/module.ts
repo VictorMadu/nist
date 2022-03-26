@@ -1,151 +1,105 @@
-import { FastifyInstance } from "fastify";
 import { Container } from "inversify";
-import _ from "lodash";
-import { ContainerHelper } from "./containerHelper";
-import { Constructor } from "../types";
-import { IAdapter } from "./interface/adapter.interface";
+import * as _ from "lodash";
+import { Constructor, ConstructorReturnType } from "../types";
+import { InjectableStore } from "./injectable-store";
 import {
-  IController,
-  IControllerClass,
-} from "./interface/controller.interface";
-import { IModuleManagerClass } from "./interface/module-class-manager.interface";
-import { IModule } from "./interface/module.interface";
-import { IService, IServiceClass } from "./interface/service.interface";
-import { ModuleClassManagerMixin } from "./module-manager-mixin";
-import { IBaseClass, InjectableClass } from "./interface/injectable.interface";
-import { getAllClassMethodsName } from "../utils";
+  IConfig,
+  IModuleDeco,
+  IModuleDecoConstructor,
+} from "./interface/module.interface";
+import ModuleStore from "./module-store";
 
-export type IConfig = {
-  imports: Constructor[];
-  controllers: Constructor[];
-  services: Constructor[];
-  exports: Constructor[];
-};
-
-type _IConfig = {
-  imports: IModuleManagerClass[];
-  controllers: IControllerClass[];
-  services: IServiceClass[];
-  exports: IServiceClass[];
-};
-
-export function Module(config: IConfig) {
-  return function (Target: Constructor): IModuleManagerClass {
-    class Decorated extends Target implements IModule {
-      private localContainer: Container;
-      private exportContainer: Container;
-      private controllerContainer: Container;
-      private containerHelper: ContainerHelper;
+export function Module({
+  imports: allImportModuleClasses = [],
+  controllers = [],
+  services: allServices = [],
+  exports: exportServices = [],
+}: Partial<IConfig>) {
+  return function (Target: Constructor): IModuleDecoConstructor {
+    return class ModuleDeco implements IModuleDeco {
+      private localContainer = new Container();
+      private exportContainer = new Container();
+      private controllerContainer = new Container();
 
       constructor() {
-        super();
-        this.setDefaultConfig(config);
-        this.containerHelper = new ContainerHelper();
-        this.localContainer = this.containerHelper.createContainer();
-        this.exportContainer = this.containerHelper.createContainer();
-        this.controllerContainer = this.containerHelper.createContainer();
+        ModuleStore.store(this);
       }
 
       load(
-        serviceAdapter: IAdapter<IService>,
-        controllerAdapter: IAdapter<IController>
+        serviceAdapter: {
+          attach: (serviceInstance: Record<string | symbol, Function>) => void;
+        },
+        controllerAdapter: {
+          attach: (serviceInstance: Record<string | symbol, Function>) => void;
+        }
       ) {
-        const importContainers = this.getImportContainers(
-          serviceAdapter,
-          controllerAdapter
+        const allImportContainers = _.map(
+          allImportModuleClasses as IModuleDecoConstructor[],
+          (ImportModuleClass) => {
+            let moduleInstance = ModuleStore.getModuleInstance(
+              ImportModuleClass
+            );
+            if (!moduleInstance) {
+              moduleInstance = new ImportModuleClass();
+              moduleInstance.load(serviceAdapter, controllerAdapter);
+            }
+            return moduleInstance.getExportContainer();
+          }
+        );
+        const localServices = _.difference(allServices, exportServices);
+
+        _.map(localServices, (localService) =>
+          this.bindToContainer(this.localContainer, localService)
+        );
+        _.map(exportServices, (exportService) =>
+          this.bindToContainer(this.exportContainer, exportService)
+        );
+        _.map(controllers, (controller) =>
+          this.bindToContainer(this.controllerContainer, controller)
         );
 
-        this.bindInjectables(
-          [this.getAllLocalServices(), this.localContainer],
-          [((config as any) as _IConfig).exports, this.exportContainer],
-          [((config as any) as _IConfig).controllers, this.controllerContainer]
-        );
-
-        const mergedContainers = this.containerHelper.merge(
+        const mergedContainer = Container.merge(
           this.localContainer,
           this.exportContainer,
           this.controllerContainer,
-          ...importContainers
+          ...allImportContainers
+        ) as Container;
+
+        _.map(allServices, (service) =>
+          serviceAdapter.attach(this.getFromContainer(mergedContainer, service))
         );
-
-        const attachToAdapterPartialFn = <T extends IAdapter>(
-          Classes: any,
-          adapter: T
-        ) => this.attachToAdapter(mergedContainers, Classes, adapter);
-
-        attachToAdapterPartialFn(config.services, serviceAdapter);
-        attachToAdapterPartialFn(config.controllers, controllerAdapter);
+        _.map(controllers, (controller) =>
+          controllerAdapter.attach(
+            this.getFromContainer(mergedContainer, controller)
+          )
+        );
 
         return this.exportContainer;
       }
 
-      private setDefaultConfig(config: IConfig) {
-        config.imports = config.imports ?? [];
-        config.services = config.services ?? [];
-        config.controllers = config.controllers ?? [];
-        config.exports = config.exports ?? [];
+      getExportContainer(): Container {
+        return this.exportContainer;
       }
 
-      private getImportContainers(
-        serviceAdapter: IAdapter<IService>,
-        controllerAdapter: IAdapter<IController>
-      ): Container[] {
-        return _.map(((config as any) as _IConfig).imports, (importModule) =>
-          this.getExportContainer(
-            importModule,
-            serviceAdapter,
-            controllerAdapter
-          )
-        );
-      }
-
-      private getExportContainer(
-        ModuleManager: IModuleManagerClass,
-        serviceAdapter: IAdapter<IService>,
-        controllerAdapter: IAdapter<IController>
-      ) {
-        if (!ModuleManager.getExportContainer()) {
-          const moduleInstance = new ModuleManager().getInstance();
-          ModuleManager.setExportContainer(
-            moduleInstance.load(serviceAdapter, controllerAdapter)
-          );
-        }
-        return ModuleManager.getExportContainer() as Container;
-      }
-
-      private attachToAdapter(
+      private bindToContainer(
         container: Container,
-        Classes: InjectableClass[],
-        adapter: IAdapter
+        Target: { new (...args: any[]): Record<string | symbol, Function> }
       ) {
-        _.forEach(Classes, (Class) => {
-          const instance = this.containerHelper.get(container, Class);
-          adapter.attach(instance);
-        });
+        container
+          .bind(InjectableStore.getInjectableHandler(Target)!.getKey())
+          .to(Target);
       }
 
-      private bindInjectables(
-        ...injectablesAndContainers: [
-          IControllerClass[] | IServiceClass[],
-          Container
-        ][]
+      private getFromContainer(
+        container: Container,
+        Target: { new (...args: any[]): Record<string | symbol, Function> }
       ) {
-        for (let i = 0; i < injectablesAndContainers.length; ++i) {
-          const [injectables, container] = injectablesAndContainers[i];
-          for (let j = 0; j < injectables.length; ++j) {
-            this.containerHelper.bind(container, injectables[j]);
-          }
-        }
-      }
-
-      private getAllLocalServices() {
-        return _.difference(
-          ((config as any) as _IConfig).services,
-          ((config as any) as _IConfig).exports
+        return container.get<ConstructorReturnType<typeof Target>>(
+          InjectableStore.getInjectableHandler(Target)!.getKey()
         );
       }
-    }
-
-    return ModuleClassManagerMixin(Decorated);
+    };
   };
 }
+
+export default Module;

@@ -1,23 +1,16 @@
 import { injectable } from "inversify";
+import * as _ from "lodash";
+import { InjectableStore } from "./injectable-store";
 import "reflect-metadata";
-import { INJECTABLE_KEY } from "./constant";
-import { IBaseClass, InjectableClass } from "./interface/injectable.interface";
+import { Constructor } from "../types";
 
-/**
- *
- * Decorator function that takes nothing as argument, It is used to to adding a static key prop to a class to be injectable so that Module can use it to bind to injection container
- */
+// Injectable decorator. Creates an injectable class from a class and stores it in the InjectableStore
 export function Injectable() {
-  return function <T extends IBaseClass = IBaseClass>(
-    TargetClass: T
-  ): InjectableClass<T> {
-    return injectable()(
-      class extends injectable()(TargetClass as IBaseClass) {
-        static [INJECTABLE_KEY] = Symbol();
-        constructor(...args: any[]) {
-          super(...args);
-        }
-      }
-    ) as InjectableClass<T>;
+  return function <T extends Constructor>(Target: T) {
+    const InjectableTarget = injectable()(Target);
+    InjectableStore.store(InjectableTarget);
+    return InjectableTarget;
   };
 }
+
+export default Injectable;
