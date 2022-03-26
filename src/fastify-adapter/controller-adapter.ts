@@ -79,7 +79,9 @@ export default class ControllerAdapter implements IControllerAdapter {
     wss: WebSocketServer,
     ws: WebSocket,
     data: { type: string; payload: any }
-  ) {}
+  ) {
+    ws.send(data, { binary: true });
+  }
 }
 
 class HttpAttacher {

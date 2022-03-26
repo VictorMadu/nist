@@ -15,10 +15,10 @@ export function setParamMetadata(fn: Function) {
       targetConstructor
     ).getInjectableHandler(targetConstructor) as IInjectableHandler;
 
-    // TODO: In future version, eliminate the unncessary if checks by initalizing values in InjeactableStore
-    _.set(injectableHandler.methodsParamDeco, methodName, [
-      _.set(injectableHandler.methodsParamDeco[methodName] ?? [], index, fn),
-    ]);
+    const arr = injectableHandler.methodsParamDeco[methodName] ?? [];
+    console.log("fn", typeof fn);
+    arr[index] = fn;
+    injectableHandler.methodsParamDeco[methodName] = arr;
   };
 }
 

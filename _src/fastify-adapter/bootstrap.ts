@@ -1,5 +1,7 @@
+import { IncomingMessage } from "http";
 import WebSocket, { WebSocketServer } from "ws";
 import { IModuleDecoConstructor } from "../core/interface/module.interface";
+import { IPayload } from "./controllers/interface/controller-adapter.interface";
 
 export class AppBootstrap {
   constructor(
@@ -14,7 +16,8 @@ export class AppBootstrap {
       handleWs: (
         wss: WebSocketServer,
         ws: WebSocket,
-        payload: { type: string; data: any }
+        req: IncomingMessage,
+        payload: IPayload
       ) => void;
     }
   ) {}
@@ -26,9 +29,10 @@ export class AppBootstrap {
   handleWsMessage(
     wss: WebSocketServer,
     ws: WebSocket,
-    payload: { type: string; data: any }
+    req: IncomingMessage,
+    payload: IPayload
   ) {
-    this.controllerAdapter.handleWs(wss, ws, payload);
+    this.controllerAdapter.handleWs(wss, ws, req, payload);
   }
 
   emitReady() {

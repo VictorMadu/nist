@@ -3,15 +3,13 @@ import Fastify, {
   FastifyReply,
   FastifyRequest,
 } from "fastify";
+import { Buffer } from "buffer";
 import * as fs from "fs";
 import * as path from "path";
 import * as yaml from "js-yaml";
+import * as _ from "lodash";
 import corsPlugin from "fastify-cors";
 import { WebSocketServer } from "ws";
-import ControllerAdapter, {
-  HttpController,
-  WsController,
-} from "../fastify-adapter/controller-adapter";
 import { Injectable } from "../core/injectable";
 import { Inject } from "../core/inject";
 import {
@@ -23,14 +21,18 @@ import {
 } from "../fastify-adapter/methods-decorators";
 import {
   Body,
+  WsData,
   Params,
   Rep,
   RepData,
+  Req,
 } from "../fastify-adapter/param-decorators";
 import { Module } from "../core/module";
 import { ServiceAdapter } from "../fastify-adapter/service-adapter";
 import { AppBootstrap } from "../fastify-adapter/bootstrap";
-import * as _ from "lodash";
+import { ControllerAdapter } from "../fastify-adapter";
+import { HttpController, WsController } from "../fastify-adapter/controllers";
+import { IPayload } from "../fastify-adapter/controllers/interface/controller-adapter.interface";
 
 const configFile = fs.readFileSync(
   path.join(
@@ -122,26 +124,34 @@ class Feed {
 class Cat {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
   @Put()
-  getText(@Body() body: any, @Rep() rep: any) {
+  getText(
+    @Body() body: any,
+    @Rep() rep: FastifyReply,
+    @Req() req: FastifyRequest
+  ) {
     rep
       .code(200)
       .send("with path '/feed' " + this.serviceOne.callMe() + " " + rep);
   }
 }
 
-@WsController(":cat")
+@WsController("cat")
 class CatWatcher {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
 
   @SubType(":change")
-  handleCatChange(data: any, isBinary: boolean) {
-    return { data, fromServiceOne: this.serviceOne.callMe() }; // to the ws.send()
+  handleCatChange(@WsData() data: any) {
+    console.log("cat watcher data", data);
+    return {
+      type: "cat:change",
+      data: { data: data, fromServiceOne: this.serviceOne.callMe() },
+    }; // to the ws.send()
   }
 }
 
 @Module({
   imports: [],
-  controllers: [Cat],
+  controllers: [Cat, CatWatcher],
   services: [ServiceOne],
   exports: [ServiceOne],
 })
@@ -173,16 +183,15 @@ appBootstrapper.emitReady();
 
 const wss = new WebSocketServer({ server: fastify.server });
 
-wss.on("connection", function connection(ws) {
+wss.on("connection", function connection(ws, req) {
   // ws.close();
-  ws.on("message", function message(payload: { type: string; data: any }) {
-    console.log("received: %s", payload);
-    appBootstrapper.handleWsMessage(wss, ws, payload);
+  ws.on("message", function message(payload: string | Buffer, isBinary) {
+    if (isBinary === true) payload = (payload as Buffer).toString("binary");
+    const parsedPayload = JSON.parse(payload as string) as IPayload;
+    appBootstrapper.handleWsMessage(wss, ws, req, parsedPayload);
   });
-
-  const isBinary = true;
-  const data = JSON.stringify({ data: "data" });
-  ws.send(data, { binary: isBinary });
+  // const data = Buffer.from(JSON.stringify({ data: "data" }), "binary");
+  // ws.send(data);
 });
 
 fastify.register(corsPlugin, {
