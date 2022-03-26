@@ -9,7 +9,7 @@ import * as path from "path";
 import * as yaml from "js-yaml";
 import * as _ from "lodash";
 import corsPlugin from "fastify-cors";
-import { WebSocketServer } from "ws";
+import { WebSocket, WebSocketServer } from "ws";
 import { Injectable } from "../core/injectable";
 import { Inject } from "../core/inject";
 import { Module } from "../core/module";
@@ -26,6 +26,8 @@ import {
 } from "../fastify-adapter/ws";
 import { WsController } from "../fastify-adapter/ws/ws.controller";
 import { IPayload } from "../fastify-adapter/interfaces/controller.adapter.interfaces";
+import { IncomingMessage } from "http";
+import { Duplex } from "stream";
 
 const configFile = fs.readFileSync(
   path.join(
@@ -174,18 +176,27 @@ const appBootstrapper = new AppBootstrap(
 appBootstrapper.start(AppModule as any);
 appBootstrapper.emitReady();
 
-const wss = new WebSocketServer({ server: fastify.server });
+const server = fastify.server;
+const wss = new WebSocketServer({ server });
 
-wss.on("connection", function connection(ws, req) {
-  // ws.close();
-  ws.on("message", function message(payload: string | Buffer, isBinary) {
-    if (isBinary === true) payload = (payload as Buffer).toString("binary");
-    const parsedPayload = JSON.parse(payload as string) as IPayload;
-    appBootstrapper.handleWsMessage(wss, ws, req, parsedPayload);
-  });
-  // const data = Buffer.from(JSON.stringify({ data: "data" }), "binary");
-  // ws.send(data);
+server.on("upgrade", function upgrade(
+  req: IncomingMessage,
+  socket: Duplex,
+  head: Buffer
+) {
+  appBootstrapper.handleServerUpgrade(req, socket, head);
 });
+
+wss.on("connection", function connection(ws: WebSocket, req: IncomingMessage) {
+  ws.on("message", function message(
+    payload: string | Buffer,
+    isBinary: boolean
+  ) {
+    appBootstrapper.handleWsMessage(wss, ws, req, payload, isBinary);
+  });
+});
+
+appBootstrapper.detectAndCloseBrokenConnection(wss);
 
 fastify.register(corsPlugin, {
   origin: (origin, cb) => {

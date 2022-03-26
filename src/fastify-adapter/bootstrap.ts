@@ -1,7 +1,8 @@
 import { IncomingMessage } from "http";
+import { Duplex } from "stream";
 import WebSocket, { WebSocketServer } from "ws";
 import { IModuleDecoConstructor } from "../core/interface/module.interface";
-import { IPayload } from "./controllers/interface/controller-adapter.interface";
+import { IPayload } from "./interfaces/controller.adapter.interfaces";
 
 export class AppBootstrap {
   constructor(
@@ -30,10 +31,20 @@ export class AppBootstrap {
     wss: WebSocketServer,
     ws: WebSocket,
     req: IncomingMessage,
-    payload: IPayload
+    payload: IPayload,
+    isBinary: boolean
   ) {
-    this.controllerAdapter.handleWs(wss, ws, req, payload);
+    this.controllerAdapter
+      .getWsHandler()
+      .handle(wss, ws, req, payload, isBinary);
   }
+
+  detectAndCloseBrokenConnection(wss: WebSocketServer) {
+    // TODO: Handle;
+    throw new Error("Not implemented");
+  }
+
+  handleServerUpgrade(req: IncomingMessage, socket: Duplex, head: Buffer) {}
 
   emitReady() {
     this.serviceAdapter.emitReady();
