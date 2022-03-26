@@ -1,36 +1,36 @@
 import * as _ from "lodash";
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { ReqRepLifeCycle } from "./interface/http.param.decorator.interface";
-import { IHttpMethod } from "./interface/http.method.decorator.interface";
+import {
+  IClassMetadata,
+  IHttpHandler,
+  IMethodMetadata,
+  IMethodParamDecoFn,
+} from "./interface/http.adapter.interface";
+import { getClassInstanceMetadatas, getClassInstanceMethod } from "../utils";
 
 export class HttpAdapter {
   constructor(private fastifyInstance: FastifyInstance) {}
 
   attach(
-    method: Function,
-    controllerMetadata: { basePath: string },
-    methodMetadata: {
-      [lifecycle in ReqRepLifeCycle]?: ((
-        req: FastifyRequest,
-        rep: FastifyReply
-      ) => void)[];
-    } & {
-      method: IHttpMethod;
-      url: string;
-    },
-    methodsParamsDecoFn: ((req: FastifyRequest, rep: FastifyReply) => any)[]
+    controller: Record<string | symbol, (...args: any[]) => any>,
+    methodName: string | symbol
   ) {
+    const method = getClassInstanceMethod<IHttpHandler>(controller, methodName);
+    const [
+      baseMetadata,
+      methodMetadata,
+      paramsGeneratorFn,
+    ] = getClassInstanceMetadatas<
+      IClassMetadata,
+      IMethodMetadata,
+      IMethodParamDecoFn[]
+    >(controller, methodName);
+
     this.fastifyInstance.route({
       ...methodMetadata,
       handler: (req: FastifyRequest, rep: FastifyReply) =>
-        method(
-          ..._.map(methodsParamsDecoFn, (fn) => {
-            console.log("http fn", fn);
-            return fn(req, rep);
-          })
-        ),
-      url:
-        (methodMetadata.url ?? "" + controllerMetadata.basePath ?? "") || "/",
+        method(..._.map(paramsGeneratorFn, (fn) => fn(req, rep))),
+      url: (methodMetadata.url ?? "" + baseMetadata.basePath ?? "") || "/",
     });
   }
 }

@@ -18,6 +18,7 @@ import {
   IControllerMethodParamMetadata,
 } from "./interfaces/controller.adapter.interfaces";
 import WsAdapter from "./ws";
+import { WsHandler } from "./ws/ws.handler";
 
 export class ControllerAdapter {
   private httpAdapter: HttpAttacher;
@@ -30,22 +31,14 @@ export class ControllerAdapter {
     const constructorClass = controller.constructor as Constructor;
     const methodNames = getAllClassMethodsName(constructorClass);
     const adapter = this.getAdapter(constructorClass);
-    _.forEach(methodNames, (methodName) => {
-      const args: IParamArgs = [
-        this.getMethod(controller, methodName),
-        ...this.getMetadata(controller, methodName),
-      ];
-      adapter.attach(...args);
-    });
+    _.forEach(methodNames, (methodName) =>
+      adapter.attach(controller, methodName)
+    );
   }
 
-  public handleWs(
-    wss: WebSocketServer,
-    ws: WebSocket,
-    req: IncomingMessage,
-    payload: IPayload
-  ) {
-    this.wsAdapter.handle(wss, ws, req, payload);
+  // heartBeatRate per ms. eg: 3000 = 3 seconds
+  public createWsHandler() {
+    return new WsHandler(this.wsAdapter);
   }
 
   private getAdapter(constructorClass: Constructor) {
@@ -59,30 +52,6 @@ export class ControllerAdapter {
       default:
         throw new Error("Unsupported Class");
     }
-  }
-
-  private getMethod(controller: IControllerInstance, methodName: IMethodName) {
-    return controller[methodName].bind(controller) as Function;
-  }
-
-  private getMetadata(
-    controller: IControllerInstance,
-    methodName: IMethodName
-  ) {
-    const controllerClass = controller.constructor as Constructor;
-    const metadata = InjectableStore.getInjectableHandler(
-      controllerClass
-    ) as InjectableHandler;
-
-    const controllerMetadata = metadata.classMetaData;
-    const methodMetadata = metadata.methodsMetaData[methodName];
-    const methodsParamsDecoFn = metadata.methodsParamDeco[methodName];
-
-    return [controllerMetadata, methodMetadata, methodsParamsDecoFn] as [
-      IControllerMetadata,
-      IControllerMethodMetadata,
-      IControllerMethodParamMetadata
-    ];
   }
 
   private getControllerType(controllerClass: Constructor) {

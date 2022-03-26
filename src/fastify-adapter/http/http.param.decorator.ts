@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { setParamMetadata } from "../../core/deco-utils";
+// TODO: Check "src\fastify-adapter\ws\ws.param.decorator.ts:8" for better understanding. Add generic types for all setParaMetadata and setMethodMetadata. Even check other things
 
 export const dataKey = Symbol();
 

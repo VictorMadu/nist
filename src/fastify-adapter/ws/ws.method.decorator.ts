@@ -1,11 +1,14 @@
+import { IncomingMessage } from "http";
 import { setMethodMetadata } from "../../core/deco-utils";
 
-export function SubType(type?: string) {
-  return function (
-    target: Record<string | symbol, any>,
-    key: string,
-    descriptor: PropertyDescriptor
-  ) {
-    setMethodMetadata("subType", type)(target, key, descriptor);
-  };
+export function Type(type: string) {
+  return setMethodMetadata("type", type);
+}
+
+export function Path(path: string) {
+  return setMethodMetadata("path", path);
+}
+
+export function Auth(fn: (req: IncomingMessage, url: URL) => boolean) {
+  return setMethodMetadata("auth", fn);
 }

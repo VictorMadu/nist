@@ -6,7 +6,9 @@ export const WsController = createController<IArgs, IWsClassMetadata>(
   (args, classMetaData) => ({
     path: args[0],
     type: args[1],
-    authentication: args[2],
+    auth: args[2],
     __type: WsType,
   })
 );
+
+export default WsController;

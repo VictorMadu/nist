@@ -1,58 +1,57 @@
+import { FastifyInstance } from "fastify";
 import { IncomingMessage } from "http";
 import { Duplex } from "stream";
 import WebSocket, { WebSocketServer } from "ws";
-import { IModuleDecoConstructor } from "../core/interface/module.interface";
+import {
+  IModuleDeco,
+  IModuleDecoConstructor,
+} from "../core/interface/module.interface";
+import ControllerAdapter from "./controller.adapter";
+import {
+  IServiceEventHandler,
+  IWsHandler,
+} from "./interfaces/bootstrap.interfaces";
 import { IPayload } from "./interfaces/controller.adapter.interfaces";
+import ServiceAdapter from "./service.adapter";
+import * as _ from "lodash";
 
 export class AppBootstrap {
-  constructor(
-    private serviceAdapter: {
-      attach: (service: Record<string | symbol, Function>) => void;
-      emitReady: () => void;
-      emitStart: () => void;
-      emitClose: () => void;
-    },
-    private controllerAdapter: {
-      attach: (controller: Record<string | symbol, Function>) => void;
-      handleWs: (
-        wss: WebSocketServer,
-        ws: WebSocket,
-        req: IncomingMessage,
-        payload: IPayload
-      ) => void;
-    }
-  ) {}
+  private serviceAdapter: ServiceAdapter;
+  private controllerAdapter: ControllerAdapter;
 
-  start(AppModule: IModuleDecoConstructor) {
-    new AppModule().load(this.serviceAdapter, this.controllerAdapter);
+  constructor(private fastify: FastifyInstance, appModule: IModuleDeco) {
+    this.serviceAdapter = new ServiceAdapter(fastify);
+    this.controllerAdapter = new ControllerAdapter(fastify);
+    appModule.load(this.serviceAdapter, this.controllerAdapter);
   }
 
-  handleWsMessage(
-    wss: WebSocketServer,
-    ws: WebSocket,
-    req: IncomingMessage,
-    payload: IPayload,
-    isBinary: boolean
-  ) {
-    this.controllerAdapter
-      .getWsHandler()
-      .handle(wss, ws, req, payload, isBinary);
+  public initWSHandler() {
+    const server = this.fastify.server;
+    const wsHandler = this.controllerAdapter.createWsHandler();
+    const wss = new WebSocketServer({ noServer: true });
+
+    // TODO: Try throwing error and see
+    wsHandler.detectAndCloseBrokenConnection(wss, 3000);
+    server.on("upgrade", (req: IncomingMessage, socket: Duplex, head: Buffer) =>
+      wsHandler.handleServerUpgrade(wss, req, socket, head)
+    );
+    wss.on("connection", function connection(
+      ws: WebSocket,
+      req: IncomingMessage,
+      url: URL
+    ) {
+      wsHandler.handleHeartBeat(ws as WebSocket & { isAlive: boolean });
+      ws.on("message", (payload: string | Buffer, isBinary: boolean) => {
+        try {
+          wsHandler.handleWsMessage(wss, ws, req, url, payload, isBinary);
+        } catch (error) {
+          ws.send(JSON.stringify({ type: "Error", message: "Uncaught error" }));
+        }
+      });
+    });
   }
 
-  detectAndCloseBrokenConnection(wss: WebSocketServer) {
-    // TODO: Handle;
-    throw new Error("Not implemented");
-  }
-
-  handleServerUpgrade(req: IncomingMessage, socket: Duplex, head: Buffer) {}
-
-  emitReady() {
-    this.serviceAdapter.emitReady();
-  }
-  emitStart() {
-    this.serviceAdapter.emitStart();
-  }
-  emitClose() {
-    this.serviceAdapter.emitClose();
+  getServiceEventHandler(): IServiceEventHandler {
+    return this.serviceAdapter;
   }
 }

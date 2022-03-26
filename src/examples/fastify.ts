@@ -3,17 +3,14 @@ import Fastify, {
   FastifyReply,
   FastifyRequest,
 } from "fastify";
-import { Buffer } from "buffer";
 import * as fs from "fs";
 import * as path from "path";
 import * as yaml from "js-yaml";
 import * as _ from "lodash";
 import corsPlugin from "fastify-cors";
-import { WebSocket, WebSocketServer } from "ws";
 import { Injectable } from "../core/injectable";
 import { Inject } from "../core/inject";
 import { Module } from "../core/module";
-import { ServiceAdapter, ControllerAdapter } from "../fastify-adapter";
 import { AppBootstrap } from "../fastify-adapter/bootstrap";
 import {
   MethodDecos as HttpMethods,
@@ -25,9 +22,6 @@ import {
   ParamDecos as WsParams,
 } from "../fastify-adapter/ws";
 import { WsController } from "../fastify-adapter/ws/ws.controller";
-import { IPayload } from "../fastify-adapter/interfaces/controller.adapter.interfaces";
-import { IncomingMessage } from "http";
-import { Duplex } from "stream";
 
 const configFile = fs.readFileSync(
   path.join(
@@ -130,12 +124,23 @@ class Cat {
   }
 }
 
-@WsController("cat")
+@WsController("cat", "cat", () => true)
 class CatWatcher {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
 
-  @WsMethods.SubType(":change")
+  @WsMethods.Type(":change")
   handleCatChange(@WsParams.Data() data: any) {
+    console.log("cat watcher data", data);
+    return {
+      type: "cat:change",
+      data: { data: data, fromServiceOne: this.serviceOne.callMe() },
+    }; // to the ws.send()
+  }
+
+  @WsMethods.Type(":change2")
+  @WsMethods.Path("/change")
+  @WsMethods.Auth(() => false)
+  handleCatChange2(@WsParams.Data() data: any) {
     console.log("cat watcher data", data);
     return {
       type: "cat:change",
@@ -168,36 +173,13 @@ class UserModule {}
 })
 class AppModule {}
 
-const appBootstrapper = new AppBootstrap(
-  new ServiceAdapter(fastify),
-  new ControllerAdapter(fastify)
-);
+const appBootstrapper = new AppBootstrap(fastify, new AppModule() as any);
+appBootstrapper.initWSHandler();
+const serviceEventHandler = appBootstrapper.getServiceEventHandler();
 
-appBootstrapper.start(AppModule as any);
-appBootstrapper.emitReady();
+serviceEventHandler.emitReady();
 
-const server = fastify.server;
-const wss = new WebSocketServer({ server });
-
-server.on("upgrade", function upgrade(
-  req: IncomingMessage,
-  socket: Duplex,
-  head: Buffer
-) {
-  appBootstrapper.handleServerUpgrade(req, socket, head);
-});
-
-wss.on("connection", function connection(ws: WebSocket, req: IncomingMessage) {
-  ws.on("message", function message(
-    payload: string | Buffer,
-    isBinary: boolean
-  ) {
-    appBootstrapper.handleWsMessage(wss, ws, req, payload, isBinary);
-  });
-});
-
-appBootstrapper.detectAndCloseBrokenConnection(wss);
-
+// TODO: Add cors for specific controllers. Create the function
 fastify.register(corsPlugin, {
   origin: (origin, cb) => {
     console.log("\n\nOrigin", origin);
@@ -212,8 +194,8 @@ fastify.listen(8080, "127.0.0.1", (err, address) => {
     console.error(err);
     process.exit(1);
   }
-  appBootstrapper.emitStart();
+  serviceEventHandler.emitStart();
   console.log("Server listening at", address);
 });
 
-fastify.addHook("onClose", () => appBootstrapper.emitClose());
+fastify.addHook("onClose", () => serviceEventHandler.emitClose());

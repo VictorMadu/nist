@@ -2,7 +2,7 @@ import * as _ from "lodash";
 import { InjectableStore } from "../injectable-store";
 import { IInjectableHandler } from "../interface/injectable-handler.interface";
 
-export function setParamMetadata(fn: Function) {
+export function setParamMetadata<F extends Function>(fn: F) {
   return function (
     target: Record<string | symbol, any>,
     methodName: string | symbol,
@@ -16,7 +16,6 @@ export function setParamMetadata(fn: Function) {
     ).getInjectableHandler(targetConstructor) as IInjectableHandler;
 
     const arr = injectableHandler.methodsParamDeco[methodName] ?? [];
-    console.log("fn", typeof fn);
     arr[index] = fn;
     injectableHandler.methodsParamDeco[methodName] = arr;
   };
