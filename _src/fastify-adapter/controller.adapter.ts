@@ -1,27 +1,27 @@
 import { FastifyInstance } from "fastify";
 import { IncomingMessage } from "http";
 import _ from "lodash";
-import { getAllClassMethodsName } from "../../utils";
+import { getAllClassMethodsName } from "../utils";
 import WebSocket, { WebSocketServer } from "ws";
-import { InjectableStore, InjectableHandler } from "../../core";
-import { Constructor } from "../../types";
-import { HttpType, WsType } from "../constants/controller.constant";
-import HttpAttacher from "./http-adapter";
+import { InjectableStore, InjectableHandler } from "../core";
+import { Constructor } from "../types";
+import HttpAttacher from "./http/http.adapter";
+import { HttpType, WsType } from "./constants/controller.adapter.constants";
 import {
+  IParamArgs,
+  IPayload,
   ControllerTypes,
   IControllerInstance,
+  IMethodName,
   IControllerMetadata,
   IControllerMethodMetadata,
   IControllerMethodParamMetadata,
-  IMethodName,
-  IParamArgs,
-  IPayload,
-} from "./interface/controller-adapter.interface";
-import WsAttacher from "./ws-adapter";
+} from "./interfaces/controller.adapter.interfaces";
+import WsAdapter from "./ws";
 
 export class ControllerAdapter {
   private httpAdapter: HttpAttacher;
-  private wsAdapter = new WsAttacher();
+  private wsAdapter = new WsAdapter();
   constructor(fastifyInstance: FastifyInstance) {
     this.httpAdapter = new HttpAttacher(fastifyInstance);
   }

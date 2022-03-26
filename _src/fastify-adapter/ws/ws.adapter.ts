@@ -1,7 +1,7 @@
 import { IncomingMessage } from "http";
 import _ from "lodash";
 import WebSocket, { createWebSocketStream, WebSocketServer } from "ws";
-import { IPayload } from "./interface/controller-adapter.interface";
+import { IPayload } from "./interface/ws.adapter.interface";
 
 export class WsAdapter {
   // store the types and handler
@@ -53,26 +53,7 @@ export class WsAdapter {
       });
       return;
     }
-    const filePath = path.join(
-      "C:/Users/EBUBE/Videos/Forex/Forex Trading Course  (LEARN TO TRADE STEP BY STEP) ( 480 X 854 ).mp4"
-    );
-    const result = handler(wss, ws, req, payload);
-    // TODO: Error Handle
-    const duplex = createWebSocketStream(ws);
-    duplex.write("Hello world");
-    // duplex.end();
-    duplex.write("Hello world1");
-    duplex.end();
-    // fs.createReadStream(filePath).pipe(duplex);
-    // if (result) ws.send(Buffer.from(JSON.stringify(result), "binary"));
   }
 }
-import * as fs from "fs";
-import * as path from "path";
 
 export default WsAdapter;
-
-const d = {
-  data: { type: "cat:change", data: { data: "d", fromServiceOne: "md" } },
-  video: { type: "Buffer", data: [102, 102, 102] },
-};

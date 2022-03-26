@@ -1,4 +1,4 @@
-import { HttpType, WsType } from "../constants/controller.constant";
+import { HttpType, WsType } from "../constants/controller.adapter.constants";
 
 export type ControllerTypes = typeof HttpType | typeof WsType;
 

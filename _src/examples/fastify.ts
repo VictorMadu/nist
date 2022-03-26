@@ -12,27 +12,20 @@ import corsPlugin from "fastify-cors";
 import { WebSocketServer } from "ws";
 import { Injectable } from "../core/injectable";
 import { Inject } from "../core/inject";
-import {
-  Get,
-  OnRequest,
-  Post,
-  Put,
-  SubType,
-} from "../fastify-adapter/methods-decorators";
-import {
-  Body,
-  WsData,
-  Params,
-  Rep,
-  RepData,
-  Req,
-} from "../fastify-adapter/param-decorators";
 import { Module } from "../core/module";
-import { ServiceAdapter } from "../fastify-adapter/service-adapter";
+import { ServiceAdapter, ControllerAdapter } from "../fastify-adapter";
 import { AppBootstrap } from "../fastify-adapter/bootstrap";
-import { ControllerAdapter } from "../fastify-adapter";
-import { HttpController, WsController } from "../fastify-adapter/controllers";
-import { IPayload } from "../fastify-adapter/controllers/interface/controller-adapter.interface";
+import {
+  MethodDecos as HttpMethods,
+  ParamDecos as HttpParams,
+} from "../fastify-adapter/http";
+import {
+  HttpController,
+  MethodDecos as WsMethods,
+  ParamDecos as WsParams,
+} from "../fastify-adapter/ws";
+import { WsController } from "../fastify-adapter/ws/ws.controller";
+import { IPayload } from "../fastify-adapter/interfaces/controller.adapter.interfaces";
 
 const configFile = fs.readFileSync(
   path.join(
@@ -96,12 +89,12 @@ class ServiceOne {
 class User {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
 
-  @OnRequest([async (req: FastifyRequest, rep: FastifyReply) => {}])
-  @Get("")
+  @HttpMethods.OnRequest([async (req: FastifyRequest, rep: FastifyReply) => {}])
+  @HttpMethods.Get("")
   getText(
-    @Params() params: any,
-    @Rep() rep: any,
-    @RepData() repData: { f: string }
+    @HttpParams.Params() params: any,
+    @HttpParams.Rep() rep: any,
+    @HttpParams.RepData() repData: { f: string }
   ) {
     rep
       .code(200)
@@ -112,8 +105,8 @@ class User {
 @HttpController("/feed")
 class Feed {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
-  @Post()
-  getText(@Body() body: any, @Rep() rep: any) {
+  @HttpMethods.Post()
+  getText(@HttpParams.Body() body: any, @HttpParams.Rep() rep: any) {
     rep
       .code(200)
       .send("with path '/feed' " + this.serviceOne.callMe() + " " + rep);
@@ -123,11 +116,11 @@ class Feed {
 @HttpController("/cat")
 class Cat {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
-  @Put()
+  @HttpMethods.Put()
   getText(
-    @Body() body: any,
-    @Rep() rep: FastifyReply,
-    @Req() req: FastifyRequest
+    @HttpParams.Body() body: any,
+    @HttpParams.Rep() rep: FastifyReply,
+    @HttpParams.Req() req: FastifyRequest
   ) {
     rep
       .code(200)
@@ -139,8 +132,8 @@ class Cat {
 class CatWatcher {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
 
-  @SubType(":change")
-  handleCatChange(@WsData() data: any) {
+  @WsMethods.SubType(":change")
+  handleCatChange(@WsParams.Data() data: any) {
     console.log("cat watcher data", data);
     return {
       type: "cat:change",

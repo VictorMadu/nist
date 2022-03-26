@@ -1,9 +1,7 @@
 import * as _ from "lodash";
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import {
-  IHttpMethod,
-  ReqRepLifeCycle,
-} from "./interface/http-adapter.interface";
+import { ReqRepLifeCycle } from "./interface/http.param.decorator.interface";
+import { IHttpMethod } from "./interface/http.method.decorator.interface";
 
 export class HttpAdapter {
   constructor(private fastifyInstance: FastifyInstance) {}

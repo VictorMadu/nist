@@ -1,5 +1,9 @@
 import { FastifyInstance } from "fastify";
-import { ONREADY, ONSTART, ONCLOSE } from "../constants/service.constant";
+import {
+  ONREADY,
+  ONSTART,
+  ONCLOSE,
+} from "../constants/service.adapter.constants";
 
 export type IListener = (fastify: FastifyInstance) => void;
 

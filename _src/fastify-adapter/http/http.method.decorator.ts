@@ -1,7 +1,7 @@
-import { IHttpMethod } from "../../src/core/interface/method.interface";
 import * as _ from "lodash";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { setMethodMetadata } from "../core/deco-utils";
+import { setMethodMetadata } from "../../core/deco-utils";
+import { IHttpMethod } from "./interface/http.method.decorator.interface";
 
 export function Get(path?: string) {
   return Method("GET", path);
@@ -79,16 +79,5 @@ function Method(method: IHttpMethod, path = "") {
   ) {
     setMethodMetadata("method", method)(target, key, descriptor);
     setMethodMetadata("path", path)(target, key, descriptor);
-  };
-}
-
-// FOR WS
-export function SubType(type?: string) {
-  return function (
-    target: Record<string | symbol, any>,
-    key: string,
-    descriptor: PropertyDescriptor
-  ) {
-    setMethodMetadata("subType", type)(target, key, descriptor);
   };
 }

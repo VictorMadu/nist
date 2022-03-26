@@ -1,7 +1,11 @@
 import { FastifyInstance } from "fastify";
 import * as _ from "lodash";
-import { ONREADY, ONSTART, ONCLOSE } from "./constants/service.constant";
-import { IListener, IService } from "./interface/service-adapter.interface";
+import {
+  ONREADY,
+  ONSTART,
+  ONCLOSE,
+} from "./constants/service.adapter.constants";
+import { IListener, IService } from "./interfaces/service.adapter.interfaces";
 
 export class ServiceAdapter {
   private onReadyListeners: IListener[] = [];
