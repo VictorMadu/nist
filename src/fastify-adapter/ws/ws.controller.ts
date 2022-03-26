@@ -1,10 +1,12 @@
 import { createController } from "../../core/deco-utils";
 import { WsType } from "../constants/controller.adapter.constants";
-import { IWsClassMetadata } from "./interface/ws.controller.interface";
+import { IArgs, IWsClassMetadata } from "./interface/ws.controller.interface";
 
-export const WsController = createController<any[], IWsClassMetadata>(
+export const WsController = createController<IArgs, IWsClassMetadata>(
   (args, classMetaData) => ({
-    baseType: args[0],
+    path: args[0],
+    type: args[1],
+    authentication: args[2],
     __type: WsType,
   })
 );
