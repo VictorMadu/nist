@@ -23,9 +23,9 @@ export class ControllerAdapter {
     const constructorClass = controller.constructor as Constructor;
     const methodNames = getAllClassMethodsName(constructorClass);
     const adapter = this.getAdapter(constructorClass);
-    _.forEach(methodNames, (methodName) =>
-      adapter.attach(controller, methodName)
-    );
+    _.forEach(methodNames, (methodName) => {
+      adapter.attach(controller, methodName);
+    });
   }
 
   // heartBeatRate per ms. eg: 3000 = 3 seconds

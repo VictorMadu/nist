@@ -13,15 +13,16 @@ import { Inject } from "../core/inject";
 import { Module } from "../core/module";
 import { AppBootstrap } from "../fastify-adapter/bootstrap";
 import {
+  HttpController,
   MethodDecos as HttpMethods,
   ParamDecos as HttpParams,
 } from "../fastify-adapter/http";
 import {
-  HttpController,
+  WsController,
   MethodDecos as WsMethods,
   ParamDecos as WsParams,
 } from "../fastify-adapter/ws";
-import { WsController } from "../fastify-adapter/ws/ws.controller";
+
 import {
   ICloseListener,
   IReadyListener,

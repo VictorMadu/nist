@@ -1,2 +1,2 @@
-export const HttpType = "http" as "http";
-export const WsType = "ws" as "ws";
+export const HttpType: "http" = "http";
+export const WsType: "ws" = "ws";
