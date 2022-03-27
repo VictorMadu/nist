@@ -21,3 +21,11 @@ export interface IConfig {
   services: { new (...args: any[]): any }[];
   exports: { new (...args: any[]): any }[];
 }
+
+export interface IAdapter {
+  attach: (adapterInstance: Record<string | symbol, Function>) => void;
+}
+
+export interface IServiceAdapter extends IAdapter {}
+
+export interface IControllerAdapter extends IAdapter {}
