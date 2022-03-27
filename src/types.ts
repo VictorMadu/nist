@@ -36,13 +36,18 @@ export type AndWithPromise<K extends any> = K | Promise<K>;
 
 export type AndWithArray<T> = T | T[]
 
-export type Keys<T extends Record< string | symbol | number, any>,> = {
+export type Keys<T extends Record< string | symbol | number, any>> = {
   [K in keyof T]: K
 }[keyof T]
 
-export type Values<T extends Record< string | symbol | number, any>,> = {
+export type Values<T extends Record< string | symbol | number, any>> = {
   [K in keyof T]: T[K]
 }[keyof T]
+
+
+export type IsInKeys<K extends string | symbol | number, R extends Record< string | symbol | number, any>> = K extends Keys<R> ? K : never;
+
+export type IsInValues<V extends string | symbol | number, R extends Record< string | symbol | number, any>> = V extends Values<R> ? V : never;
 
 
 export type ExcludeKey<

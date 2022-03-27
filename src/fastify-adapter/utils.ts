@@ -1,5 +1,4 @@
 import { InjectableStore, InjectableHandler } from "../core";
-import { IClassMetadata } from "./http/interface/http.adapter.interface";
 import { Constructor } from "./interfaces/controller.adapter.interfaces";
 import {
   IBaseMetadata,

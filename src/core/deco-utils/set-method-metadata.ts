@@ -1,8 +1,12 @@
 import * as _ from "lodash";
+import { IsInKeys } from "../../types";
 import { InjectableStore } from "../injectable-store";
 import { IInjectableHandler } from "../interface/injectable-handler.interface";
 
-export function setMethodMetadata(key: string | symbol, value: any) {
+export function setMethodMetadata<
+  R extends Record<string | symbol, any>,
+  K extends keyof R
+>(key: K, value: R[K]) {
   return function (
     target: Record<string | symbol, any>,
     methodName: string,

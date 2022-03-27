@@ -1,8 +1,13 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { IHttpMethod } from "./http.method.decorator.interface";
 import { ReqRepLifeCycle } from "./http.param.decorator.interface";
+import { HttpType } from "../../constants/controller.adapter.constants";
 
-export type IClassMetadata = { basePath: string };
+export type IHttpClassMetadata = {
+  path?: string;
+  __type: typeof HttpType;
+};
+
 export type IMethodMetadata = {
   [lifecycle in ReqRepLifeCycle]?: ((
     req: FastifyRequest,
@@ -10,7 +15,7 @@ export type IMethodMetadata = {
   ) => void)[];
 } & {
   method: IHttpMethod;
-  url: string;
+  path?: string;
 };
 
 export type IHttpHandler = (...args: any[]) => void;

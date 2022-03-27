@@ -52,6 +52,7 @@ const fastify = Fastify({
   //   key: KEY,
   //   cert: CERT,
   // },
+  logger: true,
 });
 
 fastify.ready(() => {
@@ -193,7 +194,7 @@ class AppModule {}
 const appBootstrapper = new AppBootstrap(fastify, new AppModule() as any);
 const serviceEventHandler = appBootstrapper.getServiceEventHandler();
 
-appBootstrapper.initWSHandler();
+appBootstrapper.createWs("ws://localhost:8080");
 serviceEventHandler.emitReady();
 
 // TODO: Add cors for specific controllers. Create the function

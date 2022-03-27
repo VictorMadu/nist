@@ -25,7 +25,7 @@ export class AppBootstrap {
     appModule.load(this.serviceAdapter, this.controllerAdapter);
   }
 
-  public initWSHandler() {
+  public createWs(basePath: string) {
     const server = this.fastify.server;
     const wsHandler = this.controllerAdapter.createWsHandler();
     const wss = new WebSocketServer({ noServer: true });

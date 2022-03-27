@@ -13,9 +13,9 @@ export type IHandler = (
 ) => INonBufferPayload | void;
 
 type Metadata = {
-  path: string | undefined;
-  type: string | undefined;
-  auth: ((req: IncomingMessage) => boolean) | undefined;
+  path?: string;
+  type?: string;
+  auth?: ((req: IncomingMessage, url: URL) => boolean);
 };
 
 export type IClassMetadata = Metadata;

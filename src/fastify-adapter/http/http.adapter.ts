@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import {
-  IClassMetadata,
+  IHttpClassMetadata,
   IHttpHandler,
   IMethodMetadata,
   IMethodParamDecoFn,
@@ -21,7 +21,7 @@ export class HttpAdapter {
       methodMetadata,
       paramsGeneratorFn,
     ] = getClassInstanceMetadatas<
-      IClassMetadata,
+      IHttpClassMetadata,
       IMethodMetadata,
       IMethodParamDecoFn[]
     >(controller, methodName);
@@ -34,7 +34,7 @@ export class HttpAdapter {
       ...methodMetadata,
       handler: (req: FastifyRequest, rep: FastifyReply) =>
         method(..._.map(paramsGeneratorFn, (fn) => fn(req, rep))),
-      url: (methodMetadata.url ?? "" + baseMetadata.basePath ?? "") || "/",
+      url: (methodMetadata.path ?? "" + baseMetadata.path ?? "") || "/",
     });
   }
 }

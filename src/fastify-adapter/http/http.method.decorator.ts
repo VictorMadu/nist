@@ -2,6 +2,7 @@ import * as _ from "lodash";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { setMethodMetadata } from "../../core/deco-utils";
 import { IHttpMethod } from "./interface/http.method.decorator.interface";
+import { IMethodMetadata } from "./interface/http.adapter.interface";
 
 export function Get(path?: string) {
   return Method("GET", path);
@@ -23,61 +24,76 @@ export function Delete(path?: string) {
   return Method("DELETE", path);
 }
 
+// TODO: To this type enforcing on setParamMetadata ans setClassMetadata
 export function OnRequest(
   fns: ((req: FastifyRequest, rep: FastifyReply) => void | Promise<void>)[]
 ) {
-  return setMethodMetadata("subType", fns);
+  return setMethodMetadata<IMethodMetadata, "onRequest">("onRequest", fns);
 }
 
 export function PreParsing(
   fns: ((req: FastifyRequest, rep: FastifyReply) => void | Promise<void>)[]
 ) {
-  return setMethodMetadata("preParsing", fns);
+  return setMethodMetadata<IMethodMetadata, "preParsing">("preParsing", fns);
 }
 
 export function PreValidation(
   fns: ((req: FastifyRequest, rep: FastifyReply) => void | Promise<void>)[]
 ) {
-  return setMethodMetadata("preValidation", fns);
+  return setMethodMetadata<IMethodMetadata, "preValidation">(
+    "preValidation",
+    fns
+  );
 }
 
 export function PreHandler(
   fns: ((req: FastifyRequest, rep: FastifyReply) => void | Promise<void>)[]
 ) {
-  return setMethodMetadata("preHandler", fns);
+  return setMethodMetadata<IMethodMetadata, "preHandler">("preHandler", fns);
 }
 
 export function PreSerialization(
   fns: ((req: FastifyRequest, rep: FastifyReply) => void | Promise<void>)[]
 ) {
-  return setMethodMetadata("preSerialization", fns);
+  return setMethodMetadata<IMethodMetadata, "preSerialization">(
+    "preSerialization",
+    fns
+  );
 }
 
 export function OnError(
   fns: ((req: FastifyRequest, rep: FastifyReply) => void | Promise<void>)[]
 ) {
-  return setMethodMetadata("onError", fns);
+  return setMethodMetadata<IMethodMetadata, "onError">("onError", fns);
 }
 
 export function OnResponse(
   fns: ((req: FastifyRequest, rep: FastifyReply) => void | Promise<void>)[]
 ) {
-  return setMethodMetadata("onResponse", fns);
+  return setMethodMetadata<IMethodMetadata, "onResponse">("onResponse", fns);
 }
 
 export function OnTimeout(
   fns: ((req: FastifyRequest, rep: FastifyReply) => void | Promise<void>)[]
 ) {
-  return setMethodMetadata("onTimeout", fns);
+  return setMethodMetadata<IMethodMetadata, "onTimeout">("onTimeout", fns);
 }
 
-function Method(method: IHttpMethod, path = "") {
+function Method(method: IHttpMethod, path?: string) {
   return function (
     target: Record<string | symbol, any>,
     key: string,
     descriptor: PropertyDescriptor
   ) {
-    setMethodMetadata("method", method)(target, key, descriptor);
-    setMethodMetadata("path", path)(target, key, descriptor);
+    setMethodMetadata<IMethodMetadata, "method">("method", method)(
+      target,
+      key,
+      descriptor
+    );
+    setMethodMetadata<IMethodMetadata, "path">("path", path)(
+      target,
+      key,
+      descriptor
+    );
   };
 }
