@@ -22,6 +22,11 @@ import {
   ParamDecos as WsParams,
 } from "../fastify-adapter/ws";
 import { WsController } from "../fastify-adapter/ws/ws.controller";
+import {
+  ICloseListener,
+  IReadyListener,
+  IStartListener,
+} from "fastify-adapter/interfaces/service.interface";
 
 const configFile = fs.readFileSync(
   path.join(
@@ -63,7 +68,9 @@ fastify.ready(() => {
 });
 
 @Injectable()
-class ServiceOne {
+class ServiceOne implements IReadyListener, IStartListener, ICloseListener {
+  private foo = "foo";
+
   onReady(fastify: FastifyInstance) {
     console.log("called onReady");
   }
@@ -77,19 +84,19 @@ class ServiceOne {
   }
 
   callMe() {
-    return "md";
+    return this.foo + " md";
   }
 }
 
-@HttpController("")
+@HttpController()
 class User {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
 
   @HttpMethods.OnRequest([async (req: FastifyRequest, rep: FastifyReply) => {}])
-  @HttpMethods.Get("")
+  @HttpMethods.Get()
   getText(
-    @HttpParams.Params() params: any,
-    @HttpParams.Rep() rep: any,
+    @HttpParams.Params() params: FastifyRequest["params"],
+    @HttpParams.Rep() rep: FastifyReply,
     @HttpParams.RepData() repData: { f: string }
   ) {
     rep
@@ -101,8 +108,12 @@ class User {
 @HttpController("/feed")
 class Feed {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
+
   @HttpMethods.Post()
-  getText(@HttpParams.Body() body: any, @HttpParams.Rep() rep: any) {
+  getText(
+    @HttpParams.Body() body: FastifyRequest["body"],
+    @HttpParams.Rep() rep: FastifyReply
+  ) {
     rep
       .code(200)
       .send("with path '/feed' " + this.serviceOne.callMe() + " " + rep);
@@ -112,9 +123,10 @@ class Feed {
 @HttpController("/cat")
 class Cat {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
+
   @HttpMethods.Put()
   getText(
-    @HttpParams.Body() body: any,
+    @HttpParams.Body() body: FastifyRequest["body"],
     @HttpParams.Rep() rep: FastifyReply,
     @HttpParams.Req() req: FastifyRequest
   ) {
@@ -174,9 +186,9 @@ class UserModule {}
 class AppModule {}
 
 const appBootstrapper = new AppBootstrap(fastify, new AppModule() as any);
-appBootstrapper.initWSHandler();
 const serviceEventHandler = appBootstrapper.getServiceEventHandler();
 
+appBootstrapper.initWSHandler();
 serviceEventHandler.emitReady();
 
 // TODO: Add cors for specific controllers. Create the function
