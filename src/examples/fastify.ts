@@ -27,6 +27,7 @@ import {
   IReadyListener,
   IStartListener,
 } from "fastify-adapter/interfaces/service.interface";
+import { WebSocket } from "ws";
 
 const configFile = fs.readFileSync(
   path.join(
@@ -149,15 +150,18 @@ class CatWatcher {
     }; // to the ws.send()
   }
 
+  // TODO:: Implement a ws.send param method for both buffer and string response
   @WsMethods.Type(":change2")
   @WsMethods.Path("/change")
   @WsMethods.Auth(() => false)
-  handleCatChange2(@WsParams.Data() data: any) {
+  handleCatChange2(@WsParams.Data() data: any, @WsParams.Ws() ws: WebSocket) {
     console.log("cat watcher data", data);
-    return {
-      type: "cat:change",
-      data: { data: data, fromServiceOne: this.serviceOne.callMe() },
-    }; // to the ws.send()
+    ws.send(
+      JSON.stringify({
+        type: "cat:change",
+        data: { data: data, fromServiceOne: this.serviceOne.callMe() },
+      })
+    ); // to the ws.send()
   }
 }
 

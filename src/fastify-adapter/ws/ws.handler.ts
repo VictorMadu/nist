@@ -53,9 +53,7 @@ export class WsHandler implements IWsHandler {
     const type = isBinary ? undefined : (parsedPayload as IPayload).type;
 
     const handler = this.wsAdapter.getHandler(url.pathname, type);
-    const result = handler!(wss, ws, req, url, parsedPayload, isBinary);
-    // TODO: Might remove this in the future due to obession with performance
-    if (result) ws.send(result);
+    handler!(wss, ws, req, url, parsedPayload, isBinary);
   }
 
   // heartBeatRate in ms. eg: 3000 => 3 seconds

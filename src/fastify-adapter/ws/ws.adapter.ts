@@ -5,7 +5,8 @@ import {
   IClassMetadata,
   IHandlerArgs,
   IMethodMetadata,
-  IMethodParamDecoFn,
+  IHandlerParamDecoFn,
+  IHandlerMethod,
 } from "./interface/ws.adapter.interface";
 
 export class WsAdapter {
@@ -17,7 +18,7 @@ export class WsAdapter {
       | [
           (req: IncomingMessage, url: URL) => boolean,
           {
-            [type: string | symbol]: IMethodParamDecoFn<boolean> | undefined;
+            [type: string | symbol]: IHandlerMethod<boolean>;
           }
         ]
       | undefined;
@@ -35,7 +36,7 @@ export class WsAdapter {
     ] = getClassInstanceMetadatas<
       IClassMetadata,
       IMethodMetadata,
-      IMethodParamDecoFn<boolean>[]
+      IHandlerParamDecoFn<boolean>[]
     >(controller, methodName);
 
     const defaultAuth = (req: IncomingMessage) => true;

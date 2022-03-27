@@ -24,7 +24,7 @@ export type IMethodMetadata = Metadata;
 export type IMethodPayload<B extends boolean> = B extends true ? Buffer : IPayload;
 
 // TODO: Do dynamic isBinary and payload type to other functions that uses them
-export type IMethodParamDecoFn<
+export type IHandlerParamDecoFn<
   B extends boolean
 > = (
   wss: WebSocketServer,
@@ -45,6 +45,6 @@ export type IHandlerArgs< B extends boolean> = [
   isBinary: B
 ]
 
-export type IHandlerCb = (
+export type IHandlerMethod<B extends boolean> = (
   ...args: any[]
-) => (...args: IHandlerArgs<boolean>) => IPayload | void
+) => (...args: IHandlerArgs<B>) => void
