@@ -1,21 +1,13 @@
 import { FastifyInstance } from "fastify";
-import { IncomingMessage } from "http";
 import _ from "lodash";
 import { getAllClassMethodsName } from "../utils";
-import WebSocket, { WebSocketServer } from "ws";
 import { InjectableStore, InjectableHandler } from "../core";
 import { Constructor } from "../types";
 import HttpAttacher from "./http/http.adapter";
 import { HttpType, WsType } from "./constants/controller.adapter.constants";
 import {
-  IParamArgs,
-  IPayload,
   ControllerTypes,
-  IControllerInstance,
-  IMethodName,
   IControllerMetadata,
-  IControllerMethodMetadata,
-  IControllerMethodParamMetadata,
 } from "./interfaces/controller.adapter.interfaces";
 import WsAdapter from "./ws";
 import { WsHandler } from "./ws/ws.handler";
