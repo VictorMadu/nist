@@ -4,8 +4,10 @@ import { Constructor, ConstructorReturnType } from "../types";
 import { InjectableStore } from "./injectable-store";
 import {
   IConfig,
+  IControllerAdapter,
   IModuleDeco,
   IModuleDecoConstructor,
+  IServiceAdapter,
 } from "./interface/module.interface";
 import ModuleStore from "./module-store";
 
@@ -26,35 +28,27 @@ export function Module({
       }
 
       load(
-        serviceAdapter: {
-          attach: (serviceInstance: Record<string | symbol, Function>) => void;
-        },
-        controllerAdapter: {
-          attach: (serviceInstance: Record<string | symbol, Function>) => void;
-        }
+        serviceAdapter: IServiceAdapter,
+        controllerAdapter: IControllerAdapter
       ) {
         const allImportContainers = _.map(
           allImportModuleClasses as IModuleDecoConstructor[],
-          (ImportModuleClass) => {
-            let moduleInstance = ModuleStore.getModuleInstance(
-              ImportModuleClass
-            );
-            if (!moduleInstance) {
-              moduleInstance = new ImportModuleClass();
-              moduleInstance.load(serviceAdapter, controllerAdapter);
-            }
-            return moduleInstance.getExportContainer();
-          }
+          (Module) =>
+            this.getImportedModuleExportContainers(
+              Module,
+              serviceAdapter,
+              controllerAdapter
+            )
         );
         const localServices = _.difference(allServices, exportServices);
 
-        _.map(localServices, (localService) =>
+        _.forEach(localServices, (localService) =>
           this.bindToContainer(this.localContainer, localService)
         );
-        _.map(exportServices, (exportService) =>
+        _.forEach(exportServices, (exportService) =>
           this.bindToContainer(this.exportContainer, exportService)
         );
-        _.map(controllers, (controller) =>
+        _.forEach(controllers, (controller) =>
           this.bindToContainer(this.controllerContainer, controller)
         );
 
@@ -65,14 +59,21 @@ export function Module({
           ...allImportContainers
         ) as Container;
 
-        _.map(allServices, (service) =>
-          serviceAdapter.attach(this.getFromContainer(mergedContainer, service))
-        );
-        _.map(controllers, (controller) =>
-          controllerAdapter.attach(
-            this.getFromContainer(mergedContainer, controller)
-          )
-        );
+        _.forEach(allServices, (service) => {
+          const serviceInstance = this.getFromContainer(
+            mergedContainer,
+            service
+          );
+          serviceAdapter.attach(serviceInstance);
+        });
+
+        _.forEach(controllers, (controller) => {
+          const controllerInstance = this.getFromContainer(
+            mergedContainer,
+            controller
+          );
+          controllerAdapter.attach(controllerInstance);
+        });
 
         return this.exportContainer;
       }
@@ -97,6 +98,19 @@ export function Module({
         return container.get<ConstructorReturnType<typeof Target>>(
           InjectableStore.getInjectableHandler(Target)!.getKey()
         );
+      }
+
+      private getImportedModuleExportContainers(
+        Module: IModuleDecoConstructor,
+        serviceAdapter: IServiceAdapter,
+        controllerAdapter: IControllerAdapter
+      ) {
+        let moduleInstance = ModuleStore.getModuleInstance(Module);
+        if (!moduleInstance) {
+          moduleInstance = new Module();
+          moduleInstance.load(serviceAdapter, controllerAdapter);
+        }
+        return moduleInstance.getExportContainer();
       }
     };
   };
