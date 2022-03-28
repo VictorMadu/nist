@@ -7,28 +7,27 @@ import {
   IMethodMetadata,
   IHandlerParamDecoFn,
   IHandlerMethod,
+  IWssHandler,
 } from "./interface/ws.adapter.interface";
+import { WssHandler } from "./ws.handler";
+import { FastifyInstance } from "fastify";
+import { Duplex } from "stream";
+
+const defaultAuth = (req: IncomingMessage) => true;
 
 export class WsAdapter {
-  // store the types and handler
-  // when called
-  defaultType = Symbol();
-  private wsHandlerObj: {
-    [path: string]:
-      | [
-          (req: IncomingMessage, url: URL) => boolean,
-          {
-            [type: string | symbol]: IHandlerMethod<boolean>;
-          }
-        ]
-      | undefined;
-  } = {};
+  private wssHandlers: Record<string, IWssHandler | undefined> = {};
+
+  constructor(private fastify: FastifyInstance) {}
 
   attach(
     controller: Record<string | symbol, (...args: any[]) => any>,
     methodName: string | symbol
   ) {
-    const method = getClassInstanceMethod(controller, methodName);
+    const method: (...args: any[]) => void = getClassInstanceMethod(
+      controller,
+      methodName
+    );
     const [
       baseMetadata,
       methodMetadata,
@@ -39,35 +38,41 @@ export class WsAdapter {
       IHandlerParamDecoFn<boolean>[]
     >(controller, methodName);
 
-    const defaultAuth = (req: IncomingMessage) => true;
-    const path = baseMetadata.path ?? "" + methodMetadata.path ?? "";
-    const type = methodMetadata.type
-      ? methodMetadata.type + baseMetadata.type ?? ""
-      : baseMetadata.type ?? this.defaultType;
-
-    const [authenticate, typeObj] = this.wsHandlerObj[path] ?? [
-      methodMetadata.auth ?? baseMetadata.auth ?? defaultAuth,
-      {},
-    ];
-
-    // TODO: In the params, cache the constant values returned by paramDecos
-    typeObj[type] = <B extends boolean>(...args: IHandlerArgs<B>) =>
+    const path = baseMetadata.path ?? "/";
+    const type = baseMetadata.type
+      ? baseMetadata.type + methodMetadata.type
+      : methodMetadata.type;
+    const heartbeat = baseMetadata.heartbeat ?? 3000; // 3000ms => 3 seconds
+    const auth = baseMetadata.auth ?? defaultAuth;
+    const handler = (...args: IHandlerArgs<boolean>) =>
       method(..._.map(paramsGeneratorFn, (fn) => fn(...args)));
 
-    this.wsHandlerObj[path] = [authenticate, typeObj];
+    console.log("ws path", path);
+    console.log("ws type", type);
+
+    const wssHandler =
+      this.wssHandlers[path] ?? new WssHandler(heartbeat, auth);
+
+    wssHandler.setType(type, handler);
+    this.wssHandlers[path] = wssHandler;
   }
 
-  authenticate(req: IncomingMessage, url: URL) {
-    const authenticationAndHandler = this.wsHandlerObj[url.pathname];
-    if (!authenticationAndHandler) return false;
-    return authenticationAndHandler[0](req, url);
+  public handleServerUpgrade() {
+    this.fastify.server.on(
+      "upgrade",
+      (req: IncomingMessage, socket: Duplex, head: Buffer) => {
+        console.log("upgrading", req.url);
+        const wssHandler = this.wssHandlers[req.url ?? ""];
+        console.log("wssHandler", wssHandler);
+        if (!wssHandler) this.destroySocket(socket, "Path does not exist");
+        else wssHandler.handleServerUpgrade(req, socket, head);
+      }
+    );
   }
 
-  getHandler(path: string, type?: string) {
-    const authenticationAndHandlerObj = this.wsHandlerObj[path];
-    if (!authenticationAndHandlerObj) return undefined;
-    const [, handlerObj] = authenticationAndHandlerObj;
-    return handlerObj[type ?? this.defaultType];
+  private destroySocket(socket: Duplex, msg: string) {
+    socket.write(msg);
+    socket.destroy();
   }
 }
 

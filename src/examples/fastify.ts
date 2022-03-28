@@ -139,31 +139,44 @@ class Cat {
   }
 }
 
-@WsController("cat", "cat", () => true)
+@WsController("/cats", "cat", () => true, 4000)
 class CatWatcher {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
 
   @WsMethods.Type(":change")
-  handleCatChange(@WsParams.Data() data: any) {
-    console.log("cat watcher data", data);
-    return {
-      type: "cat:change",
-      data: { data: data, fromServiceOne: this.serviceOne.callMe() },
-    }; // to the ws.send()
-  }
-
-  // TODO:: Implement a ws.send param method for both buffer and string response
-  @WsMethods.Type(":change2")
-  @WsMethods.Path("/change")
-  @WsMethods.Auth(() => false)
-  handleCatChange2(@WsParams.Data() data: any, @WsParams.Ws() ws: WebSocket) {
+  handleCatChange(@WsParams.Data() data: any, @WsParams.Ws() ws: WebSocket) {
     console.log("cat watcher data", data);
     ws.send(
       JSON.stringify({
         type: "cat:change",
         data: { data: data, fromServiceOne: this.serviceOne.callMe() },
       })
-    ); // to the ws.send()
+    );
+  }
+  // TODO: Critical remove url path and put in yaml or env
+  // TODO:: Implement a ws.send param method for both buffer and string response
+  // TODO: Implement a ws instance specific context which can have observer function and co using method param
+  @WsMethods.Type(":change2")
+  handleCatChange2(@WsParams.Data() data: any, @WsParams.Ws() ws: WebSocket) {
+    console.log("cat watcher data", data);
+    // const filePath = path.join(
+    //   "C:/Users/EBUBE/Desktop/Home/secret_hub/codes/mine/test/cppd-site/pages/index.tsx"
+    // );
+    const filePath = path.join("C:/Users/EBUBE/Videos/Videoer/ok.mp4");
+    const source = fs.createReadStream(filePath);
+    source.on("data", (chunk) => {
+      console.log("emitted data", typeof chunk);
+      ws.send(JSON.stringify({ type: "buffer:chunk", data: chunk }), {
+        binary: true,
+      });
+    });
+
+    source.on("finish", () => {
+      console.log("emitted finished");
+      ws.send(JSON.stringify({ type: "finished", data: null }), {
+        binary: true,
+      });
+    });
   }
 }
 
@@ -193,8 +206,7 @@ class AppModule {}
 
 const appBootstrapper = new AppBootstrap(fastify, new AppModule() as any);
 const serviceEventHandler = appBootstrapper.getServiceEventHandler();
-
-appBootstrapper.createWs("ws://localhost:8080");
+appBootstrapper.startWs();
 serviceEventHandler.emitReady();
 
 // TODO: Add cors for specific controllers. Create the function

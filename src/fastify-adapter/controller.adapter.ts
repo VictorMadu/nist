@@ -3,20 +3,21 @@ import _ from "lodash";
 import { getAllClassMethodsName } from "../utils";
 import { InjectableStore, InjectableHandler } from "../core";
 import { Constructor } from "../types";
-import HttpAttacher from "./http/http.adapter";
+import HttpAdapter from "./http/http.adapter";
 import { HttpType, WsType } from "./constants/controller.adapter.constants";
 import {
   ControllerTypes,
   IControllerMetadata,
 } from "./interfaces/controller.adapter.interfaces";
 import WsAdapter from "./ws";
-import { WsHandler } from "./ws/ws.handler";
 
 export class ControllerAdapter {
-  private httpAdapter: HttpAttacher;
-  private wsAdapter = new WsAdapter();
-  constructor(fastifyInstance: FastifyInstance) {
-    this.httpAdapter = new HttpAttacher(fastifyInstance);
+  private httpAdapter: HttpAdapter;
+  private wsAdapter: WsAdapter;
+
+  constructor(fastify: FastifyInstance) {
+    this.httpAdapter = new HttpAdapter(fastify);
+    this.wsAdapter = new WsAdapter(fastify);
   }
 
   public attach(controller: Record<string | symbol, any>) {
@@ -28,10 +29,14 @@ export class ControllerAdapter {
     });
   }
 
-  // heartBeatRate per ms. eg: 3000 = 3 seconds
-  public createWsHandler() {
-    return new WsHandler(this.wsAdapter);
+  public getWsAdapter() {
+    return this.wsAdapter;
   }
+
+  // heartBeatRate per ms. eg: 3000 = 3 seconds
+  // public createWsHandler() {
+  //   return new WsHandler(this.wsAdapter);
+  // }
 
   private getAdapter(constructorClass: Constructor) {
     const type = this.getControllerType(constructorClass) as ControllerTypes;

@@ -2,83 +2,91 @@ import { IncomingMessage } from "http";
 import * as _ from "lodash";
 import { Duplex } from "stream";
 import { WebSocket, WebSocketServer } from "ws";
-import { IPayload } from "./interface/ws.adapter.interface";
-import { IWsHandler } from "./interface/ws.handler.interface";
-import WsAdapter from "./ws.adapter";
+import { IWssHandler, IHandlerMethod } from "./interface/ws.adapter.interface";
 
-export class WsHandler implements IWsHandler {
-  constructor(private wsAdapter: WsAdapter) {}
+export class WssHandler implements IWssHandler {
+  private wss = new WebSocketServer({ noServer: true });
+  private defaultWsHandler: IHandlerMethod<boolean> = (...args: any[]) => (
+    ...args: any[]
+  ) => {};
+  private otherWsHandlers: Record<string, IHandlerMethod<boolean>> = {};
 
-  handleServerUpgrade(
-    wss: WebSocketServer,
-    req: IncomingMessage,
-    socket: Duplex,
-    head: Buffer
+  constructor(
+    private heartbeat: number,
+    private authFn: (req: IncomingMessage) => boolean
   ) {
-    let url: URL;
-    try {
-      url = new URL(req.url as string);
-      const isAllowed = this.wsAdapter.authenticate(req, url);
-      if (!isAllowed)
-        return this.destroySocket(socket, "HTTP/1.1 401 Unauthorized\r\n\r\n");
-    } catch (error) {
-      if (
-        (error as Error).constructor === TypeError &&
-        (error as Error).message === "Invalid Path"
-      )
-        return this.destroySocket(socket, "Invalid path");
-      return this.destroySocket(socket);
+    this.handleOnConnection();
+    this.detectAndCloseBrokenConnection();
+  }
+
+  // TODO: Inside of always passing IHandlerMethod<boolean> arguments to parameter decorator function. Why not at initial stage initalize a class that we can get all needed stuff. Same with Controllers. Check if there is significant perf different btw this and  the current implementation
+  setType(type: string | undefined, handler: IHandlerMethod<boolean>) {
+    if (type) this.otherWsHandlers[type] = handler;
+    else this.defaultWsHandler = handler;
+    console.log("wsHandlers", Object.keys(this.otherWsHandlers));
+  }
+
+  handleServerUpgrade(req: IncomingMessage, socket: Duplex, head: Buffer) {
+    console.log("Entered handling of upgrade");
+    const isAllowed = this.authFn(req);
+    console.log("isAllowed", isAllowed);
+    if (!isAllowed) {
+      socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+      socket.destroy();
     }
 
-    if (!this.wsAdapter.getHandler(url.pathname))
-      return this.destroySocket(socket, "Path does not exist");
-
     // TODO: Get some important use data from database and sent to connection => eg: 'connection', ws, req, client
-    wss.handleUpgrade(req, socket, head, (ws) => {
-      wss.emit("connection", ws, req, url);
+    this.wss.handleUpgrade(req, socket, head, (ws) => {
+      console.log("emitted upgrade to connection");
+      this.wss.emit("connection", ws, req);
     });
   }
 
-  handleWsMessage<B extends boolean>(
-    wss: WebSocketServer,
-    ws: WebSocket,
-    req: IncomingMessage,
-    url: URL,
-    payload: B extends true ? Buffer : string,
-    isBinary: B
-  ) {
-    const parsedPayload = isBinary
-      ? (payload as Buffer)
-      : (JSON.parse(payload as string) as IPayload);
-    const type = isBinary ? undefined : (parsedPayload as IPayload).type;
+  handleOnConnection() {
+    this.wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
+      this.handleHeartBeat(ws as any);
+      ws.on("message", (payload, isBinary) => {
+        console.log(
+          `Received message ${payload} with isBinary ${isBinary} and of type ${typeof payload}`
+        );
 
-    const handler = this.wsAdapter.getHandler(url.pathname, type);
-    handler!(wss, ws, req, url, parsedPayload, isBinary);
+        const parsedPayload = this.getParsedPayload(payload, isBinary);
+        const type = parsedPayload.type;
+
+        const handler =
+          type == null ? this.defaultWsHandler : this.otherWsHandlers[type];
+        handler(this.wss, ws, req, parsedPayload);
+      });
+    });
+  }
+
+  private getParsedPayload(
+    payload: ArrayBuffer | Buffer | Buffer[] | string,
+    isBinary: boolean
+  ): { type: string | undefined; data: any } {
+    return isBinary
+      ? { data: payload as Buffer | ArrayBuffer | Buffer[] }
+      : JSON.parse(payload as string);
   }
 
   // heartBeatRate in ms. eg: 3000 => 3 seconds
-  detectAndCloseBrokenConnection(wss: WebSocketServer, heartBeatRate = 3000) {
+  private detectAndCloseBrokenConnection() {
     const interval = setInterval(() => {
-      wss.clients.forEach((ws) => {
+      this.wss.clients.forEach((ws) => {
         if ((ws as WebSocket & { isAlive: boolean }).isAlive === false)
           return ws.terminate();
 
         (ws as WebSocket & { isAlive: boolean }).isAlive = false;
         ws.ping();
       });
-    }, heartBeatRate);
+    }, this.heartbeat);
 
-    wss.on("close", () => clearInterval(interval));
+    this.wss.on("close", () => clearInterval(interval));
   }
 
-  handleHeartBeat(ws: WebSocket & { isAlive: boolean }) {
+  private handleHeartBeat(ws: WebSocket & { isAlive: boolean }) {
     ws.on("pong", () => {
       (ws as WebSocket & { isAlive: boolean }).isAlive = true;
     });
-  }
-
-  private destroySocket(socket: Duplex, errMsg?: string) {
-    socket.write(errMsg ?? "Uncaught Error");
-    socket.destroy();
   }
 }

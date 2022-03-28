@@ -6,51 +6,49 @@ import { INonBufferPayload } from "./interface/ws.controller.interface";
 
 export function Wss() {
   return setParamMetadata<IHandlerParamDecoFn<boolean>>(
-    (wss, ws, req, url, payload, isBinary) => wss
+    (wss, ws, req, payload) => wss
   );
 }
 
 export function Ws() {
   return setParamMetadata<IHandlerParamDecoFn<boolean>>(
-    (wss, ws, req, url, payload, isBinary) => ws
+    (wss, ws, req, payload) => ws
   );
 }
 
 export function Data() {
   return setParamMetadata<IHandlerParamDecoFn<boolean>>(
-    (wss, ws, req, url, payload, isBinary) =>
-      isBinary ? (payload as Buffer) : (payload as INonBufferPayload).data
+    (wss, ws, req, payload) => payload.data
   );
 }
 
 export function Type() {
   return setParamMetadata<IHandlerParamDecoFn<boolean>>(
-    (wss, ws, req, url, payload, isBinary) =>
-      isBinary ? undefined : (payload as INonBufferPayload).type
+    (wss, ws, req, payload) => payload.type
   );
 }
 
 export function Req() {
   return setParamMetadata<IHandlerParamDecoFn<boolean>>(
-    (wss, ws, req, url, payload, isBinary) => req
+    (wss, ws, req, payload) => req
   );
 }
 
 export function Url() {
   return setParamMetadata<IHandlerParamDecoFn<boolean>>(
-    (wss, ws, req, url, payload, isBinary) => url
+    (wss, ws, req, payload) => req.url
   );
 }
 
 export function Ip() {
   return setParamMetadata<IHandlerParamDecoFn<boolean>>(
-    (wss, ws, req, url, payload, isBinary) => req.socket.remoteAddress
+    (wss, ws, req, payload) => req.socket.remoteAddress
   );
 }
 
 export function IpXForwardedFor() {
   return setParamMetadata<IHandlerParamDecoFn<boolean>>(
-    (wss, ws, req, url, payload, isBinary) =>
+    (wss, ws, req, payload) =>
       // TODO: WARNING: req.headers["x-forwarded-for"] may be of type string[]. Look into this
       (req.headers["x-forwarded-for"] as string | undefined)
         ?.split(",")[0]
