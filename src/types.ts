@@ -101,8 +101,6 @@ export type PosFloat<T extends number> = Float<T> extends never ? never : `${T}`
 
 export type NegFloat<T extends number> =  Float<T> extends never ? never : PosFloat<T> extends never ? T : never;
 
-// TODO: other datatypes
-
 // TODO: Tackle the following below
 type TwoStrCombo<T extends string, U extends string> = T | U | `${T} ${U}` | `${U} ${T}`;
 
