@@ -4,6 +4,10 @@ import { setMethodMetadata } from "../../core/deco-utils";
 import { IHttpMethod } from "./interface/http.method.decorator.interface";
 import { IMethodMetadata } from "./interface/http.adapter.interface";
 
+export function Options(path?: string) {
+  return Method("OPTIONS", path);
+}
+
 export function Get(path?: string) {
   return Method("GET", path);
 }
