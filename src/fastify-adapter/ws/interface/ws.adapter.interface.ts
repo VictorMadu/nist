@@ -1,4 +1,3 @@
-import { FastifyInstance } from "fastify";
 import { IncomingMessage } from "http";
 import { Duplex } from "stream";
 import WebSocket, { WebSocketServer } from "ws";
@@ -25,6 +24,7 @@ export type IClassMetadata =  {
   type?: string;
   heartbeat?: number;
   auth?: ((req: IncomingMessage) => boolean);
+  eventEmitter?: (ws: WebSocket) => void
 };
 export type IMethodMetadata = {
   type?: string;
@@ -33,9 +33,7 @@ export type IMethodMetadata = {
 export type IMethodPayload<B extends boolean> = B extends true ? ArrayBuffer | Buffer | Buffer[]  : IPayload;
 
 // TODO: Do dynamic isBinary and payload type to other functions that uses them
-export type IHandlerParamDecoFn<
-  B extends boolean
-> = (
+export type IHandlerParamDecoFn = (
   wss: WebSocketServer,
   ws: WebSocket,
   req: IncomingMessage,

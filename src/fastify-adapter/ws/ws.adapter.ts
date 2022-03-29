@@ -12,8 +12,10 @@ import {
 import { WssHandler } from "./ws.handler";
 import { FastifyInstance } from "fastify";
 import { Duplex } from "stream";
+import { WebSocket } from "ws";
 
 const defaultAuth = (req: IncomingMessage) => true;
+const defaultWsEventEmitter = (ws: WebSocket) => {};
 
 export class WsAdapter {
   private wssHandlers: Record<string, IWssHandler | undefined> = {};
@@ -35,7 +37,7 @@ export class WsAdapter {
     ] = getClassInstanceMetadatas<
       IClassMetadata,
       IMethodMetadata,
-      IHandlerParamDecoFn<boolean>[]
+      IHandlerParamDecoFn[]
     >(controller, methodName);
 
     const path = baseMetadata.path ?? "/";
@@ -46,12 +48,9 @@ export class WsAdapter {
     const auth = baseMetadata.auth ?? defaultAuth;
     const handler = (...args: IHandlerArgs<boolean>) =>
       method(..._.map(paramsGeneratorFn, (fn) => fn(...args)));
-
-    console.log("ws path", path);
-    console.log("ws type", type);
-
+    const wsEventEmitter = baseMetadata.eventEmitter ?? defaultWsEventEmitter;
     const wssHandler =
-      this.wssHandlers[path] ?? new WssHandler(heartbeat, auth);
+      this.wssHandlers[path] ?? new WssHandler(heartbeat, auth, wsEventEmitter);
 
     wssHandler.setType(type, handler);
     this.wssHandlers[path] = wssHandler;
@@ -61,9 +60,7 @@ export class WsAdapter {
     this.fastify.server.on(
       "upgrade",
       (req: IncomingMessage, socket: Duplex, head: Buffer) => {
-        console.log("upgrading", req.url);
         const wssHandler = this.wssHandlers[req.url ?? ""];
-        console.log("wssHandler", wssHandler);
         if (!wssHandler) this.destroySocket(socket, "Path does not exist");
         else wssHandler.handleServerUpgrade(req, socket, head);
       }

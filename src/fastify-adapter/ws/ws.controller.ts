@@ -7,10 +7,7 @@ export const WsController = createController<
   IArgs,
   IClassMetadata & { __type: typeof WsType }
 >((args, classMetaData) => ({
-  path: args[0],
-  type: args[1],
-  auth: args[2],
-  heartbeat: args[3],
+  ...args[0],
   __type: WsType,
 }));
 

@@ -13,9 +13,10 @@ export class WssHandler implements IWssHandler {
 
   constructor(
     private heartbeat: number,
-    private authFn: (req: IncomingMessage) => boolean
+    private authFn: (req: IncomingMessage) => boolean,
+    eventEmitter: (ws: WebSocket) => void
   ) {
-    this.handleOnConnection();
+    this.handleOnConnection(eventEmitter);
     this.detectAndCloseBrokenConnection();
   }
 
@@ -42,9 +43,10 @@ export class WssHandler implements IWssHandler {
     });
   }
 
-  handleOnConnection() {
+  handleOnConnection(eventEmitter: (ws: WebSocket) => void) {
     this.wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
       this.handleHeartBeat(ws as any);
+      eventEmitter(ws);
       ws.on("message", (payload, isBinary) => {
         console.log(
           `Received message ${payload} with isBinary ${isBinary} and of type ${typeof payload}`

@@ -1,3 +1,1 @@
-import { IMethodParamDecoFn } from "./ws.adapter.interface";
-
-export type IParamMetadata = (args: IMethodParamDecoFn<boolean>) => any;
+export type ISend = (obj: Record<string, any>, isBinary?: boolean) => void;

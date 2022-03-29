@@ -29,6 +29,7 @@ import {
   IStartListener,
 } from "fastify-adapter/interfaces/service.interface";
 import { WebSocket } from "ws";
+import { ISend } from "fastify-adapter/ws/interface/ws.param.decorator.interface";
 
 const configFile = fs.readFileSync(
   path.join(
@@ -39,13 +40,6 @@ const configFile = fs.readFileSync(
 );
 
 const yamlLoadedConfigFile = yaml.load(configFile) as Record<string, any>;
-
-const KEY = fs.readFileSync(
-  path.join(_.get(yamlLoadedConfigFile, "app.key") as string)
-);
-const CERT = fs.readFileSync(
-  path.join(_.get(yamlLoadedConfigFile, "app.cert") as string)
-);
 
 const fastify = Fastify({
   // https: {
@@ -139,7 +133,12 @@ class Cat {
   }
 }
 
-@WsController("/cats", "cat", () => true, 4000)
+@WsController({
+  path: "/cats",
+  type: "cat",
+  auth: () => true,
+  heartbeat: 4000,
+})
 class CatWatcher {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
 
@@ -153,29 +152,25 @@ class CatWatcher {
       })
     );
   }
-  // TODO: Critical remove url path and put in yaml or env
-  // TODO:: Implement a ws.send param method for both buffer and string response
-  // TODO: Implement a ws instance specific context which can have observer function and co using method param
+
   @WsMethods.Type(":change2")
-  handleCatChange2(@WsParams.Data() data: any, @WsParams.Ws() ws: WebSocket) {
+  handleCatChange2(
+    @WsParams.Data() data: any,
+    @WsParams.Ws() ws: WebSocket,
+    @WsParams.Send() send: ISend
+  ) {
     console.log("cat watcher data", data);
-    // const filePath = path.join(
-    //   "C:/Users/EBUBE/Desktop/Home/secret_hub/codes/mine/test/cppd-site/pages/index.tsx"
-    // );
-    const filePath = path.join("C:/Users/EBUBE/Videos/Videoer/ok.mp4");
+    const filePath = _.get(yamlLoadedConfigFile, "app.filePath") as string;
     const source = fs.createReadStream(filePath);
+
     source.on("data", (chunk) => {
-      console.log("emitted data", typeof chunk);
-      ws.send(JSON.stringify({ type: "buffer:chunk", data: chunk }), {
-        binary: true,
-      });
+      console.log("emitted data", chunk?.constructor);
+      send({ type: "buffer:chunk", data: chunk }, true);
     });
 
-    source.on("finish", () => {
+    source.on("close", () => {
       console.log("emitted finished");
-      ws.send(JSON.stringify({ type: "finished", data: null }), {
-        binary: true,
-      });
+      send({ type: "finished", data: null }, true);
     });
   }
 }
