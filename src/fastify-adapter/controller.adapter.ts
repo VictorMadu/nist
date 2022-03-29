@@ -33,11 +33,6 @@ export class ControllerAdapter {
     return this.wsAdapter;
   }
 
-  // heartBeatRate per ms. eg: 3000 = 3 seconds
-  // public createWsHandler() {
-  //   return new WsHandler(this.wsAdapter);
-  // }
-
   private getAdapter(constructorClass: Constructor) {
     const type = this.getControllerType(constructorClass) as ControllerTypes;
 

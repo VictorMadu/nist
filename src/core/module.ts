@@ -27,7 +27,7 @@ export function Module({
         ModuleStore.store(this);
       }
 
-      load(
+      public load(
         serviceAdapter: IServiceAdapter,
         controllerAdapter: IControllerAdapter
       ) {
@@ -78,7 +78,7 @@ export function Module({
         return this.exportContainer;
       }
 
-      getExportContainer(): Container {
+      public getExportContainer(): Container {
         return this.exportContainer;
       }
 

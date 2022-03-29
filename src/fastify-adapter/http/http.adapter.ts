@@ -11,7 +11,7 @@ import { getClassInstanceMetadatas, getClassInstanceMethod } from "../utils";
 export class HttpAdapter {
   constructor(private fastifyInstance: FastifyInstance) {}
 
-  attach(
+  public attach(
     controller: Record<string | symbol, (...args: any[]) => any>,
     methodName: string | symbol
   ) {

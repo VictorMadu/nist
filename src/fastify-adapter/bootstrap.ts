@@ -31,7 +31,7 @@ export class AppBootstrap {
     wsAdapter.handleServerUpgrade();
   }
 
-  getServiceEventHandler(): IServiceEventHandler {
+  public getServiceEventHandler(): IServiceEventHandler {
     return this.serviceAdapter;
   }
 }

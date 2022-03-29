@@ -21,12 +21,16 @@ export class WssHandler implements IWssHandler {
   }
 
   // TODO: Inside of always passing IHandlerMethod<boolean> arguments to parameter decorator function. Why not at initial stage initalize a class that we can get all needed stuff. Same with Controllers. Check if there is significant perf different btw this and  the current implementation
-  setType(type: string | undefined, handler: IHandlerMethod<boolean>) {
+  public setType(type: string | undefined, handler: IHandlerMethod<boolean>) {
     if (type) this.otherWsHandlers[type] = handler;
     else this.defaultWsHandler = handler;
   }
 
-  handleServerUpgrade(req: IncomingMessage, socket: Duplex, head: Buffer) {
+  public handleServerUpgrade(
+    req: IncomingMessage,
+    socket: Duplex,
+    head: Buffer
+  ) {
     const isAllowed = this.authFn(req);
     if (!isAllowed) {
       socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
@@ -39,7 +43,7 @@ export class WssHandler implements IWssHandler {
     });
   }
 
-  handleOnConnection(eventEmitter: (ws: WebSocket) => void) {
+  public handleOnConnection(eventEmitter: (ws: WebSocket) => void) {
     this.wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
       this.handleHeartBeat(ws as any);
       eventEmitter(ws);

@@ -14,19 +14,19 @@ export class ServiceAdapter {
 
   constructor(private fastifyInstance: FastifyInstance) {}
 
-  attach(service: IService) {
+  public attach(service: IService) {
     this.attachToListener(service, ONREADY, this.onReadyListeners);
     this.attachToListener(service, ONSTART, this.onStartListeners);
     this.attachToListener(service, ONCLOSE, this.onCloseListeners);
   }
 
-  emitReady() {
+  public emitReady() {
     this.emitEvent(this.onReadyListeners);
   }
-  emitStart() {
+  public emitStart() {
     this.emitEvent(this.onStartListeners);
   }
-  emitClose() {
+  public emitClose() {
     this.emitEvent(this.onReadyListeners);
   }
 

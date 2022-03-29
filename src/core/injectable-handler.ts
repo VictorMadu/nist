@@ -13,7 +13,7 @@ export class InjectableHandler implements IInjectableHandler {
   methodsMetaData: IMethodsMetadata = {};
   methodsParamDeco: IMethodsParamDeco = {};
 
-  getKey() {
+  public getKey() {
     return this.key;
   }
 }
