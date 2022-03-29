@@ -8,20 +8,20 @@ import * as path from "path";
 import * as yaml from "js-yaml";
 import * as _ from "lodash";
 import corsPlugin from "fastify-cors";
-import { Injectable } from "../core/injectable";
-import { Inject } from "../core/inject";
-import { Module } from "../core/module";
-import { AppBootstrap } from "../fastify-adapter/bootstrap";
+import { Injectable } from "../src/core/injectable";
+import { Inject } from "../src/core/inject";
+import { Module } from "../src/core/module";
+import { AppBootstrap } from "../src/fastify-adapter/bootstrap";
 import {
   HttpController,
   MethodDecos as HttpMethods,
   ParamDecos as HttpParams,
-} from "../fastify-adapter/http";
+} from "../src/fastify-adapter/http";
 import {
   WsController,
   MethodDecos as WsMethods,
   ParamDecos as WsParams,
-} from "../fastify-adapter/ws";
+} from "../src/fastify-adapter/ws";
 
 import {
   ICloseListener,
