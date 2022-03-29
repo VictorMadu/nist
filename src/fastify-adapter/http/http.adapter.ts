@@ -26,10 +26,6 @@ export class HttpAdapter {
       IMethodParamDecoFn[]
     >(controller, methodName);
 
-    console.log("baseMetadata", baseMetadata);
-    console.log("methodMetadata", methodMetadata);
-    console.log("paramsGeneratorFn", paramsGeneratorFn);
-
     this.fastifyInstance.route({
       ...methodMetadata,
       handler: (req: FastifyRequest, rep: FastifyReply) =>

@@ -24,13 +24,10 @@ export class WssHandler implements IWssHandler {
   setType(type: string | undefined, handler: IHandlerMethod<boolean>) {
     if (type) this.otherWsHandlers[type] = handler;
     else this.defaultWsHandler = handler;
-    console.log("wsHandlers", Object.keys(this.otherWsHandlers));
   }
 
   handleServerUpgrade(req: IncomingMessage, socket: Duplex, head: Buffer) {
-    console.log("Entered handling of upgrade");
     const isAllowed = this.authFn(req);
-    console.log("isAllowed", isAllowed);
     if (!isAllowed) {
       socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
       socket.destroy();
@@ -38,7 +35,6 @@ export class WssHandler implements IWssHandler {
 
     // TODO: Get some important use data from database and sent to connection => eg: 'connection', ws, req, client
     this.wss.handleUpgrade(req, socket, head, (ws) => {
-      console.log("emitted upgrade to connection");
       this.wss.emit("connection", ws, req);
     });
   }
@@ -48,10 +44,6 @@ export class WssHandler implements IWssHandler {
       this.handleHeartBeat(ws as any);
       eventEmitter(ws);
       ws.on("message", (payload, isBinary) => {
-        console.log(
-          `Received message ${payload} with isBinary ${isBinary} and of type ${typeof payload}`
-        );
-
         const parsedPayload = this.getParsedPayload(payload, isBinary);
         const type = parsedPayload.type;
 

@@ -19,7 +19,6 @@ export function setMethodMetadata<
       targetConstructor
     ).getInjectableHandler(targetConstructor) as IInjectableHandler;
 
-    console.log("registering methodMetadata", key, value);
     _.merge(injectableHandler.methodsMetaData, {
       [methodName]: { [key]: value },
     });
