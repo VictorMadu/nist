@@ -2,7 +2,7 @@ import { injectable } from "inversify";
 import * as _ from "lodash";
 import { InjectableStore } from "./injectable-store";
 import "reflect-metadata";
-import { Constructor } from "../types";
+import { Constructor } from "ts-types";
 
 // Injectable decorator. Creates an injectable class from a class and stores it in the InjectableStore
 export function Injectable() {

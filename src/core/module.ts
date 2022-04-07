@@ -1,6 +1,6 @@
 import { Container } from "inversify";
 import * as _ from "lodash";
-import { Constructor, ConstructorReturnType } from "../types";
+import { Constructor, ConstructorReturnType } from "ts-types";
 import { InjectableStore } from "./injectable-store";
 import {
   IConfig,

@@ -1,5 +1,5 @@
 import * as _ from "lodash";
-import { IsInKeys } from "../../types";
+import { IsInKeys } from "ts-types";
 import { InjectableStore } from "../injectable-store";
 import { IInjectableHandler } from "../interface/injectable-handler.interface";
 

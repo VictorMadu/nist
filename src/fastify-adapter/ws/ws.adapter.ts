@@ -26,14 +26,14 @@ export class WsAdapter {
     controller: Record<string | symbol, (...args: any[]) => any>,
     methodName: string | symbol
   ) {
-    const method: (...args: any[]) => void = getClassInstanceMethod(
+    const handlerFn: (...args: any[]) => void = getClassInstanceMethod(
       controller,
       methodName
     );
     const [
       baseMetadata,
       methodMetadata,
-      paramsGeneratorFn,
+      paramGeneratorFns,
     ] = getClassInstanceMetadatas<
       IClassMetadata,
       IMethodMetadata,
@@ -47,7 +47,7 @@ export class WsAdapter {
     const heartbeat = baseMetadata.heartbeat ?? 3000; // 3000ms => 3 seconds
     const auth = baseMetadata.auth ?? defaultAuth;
     const handler = (...args: IHandlerArgs<boolean>) =>
-      method(..._.map(paramsGeneratorFn, (fn) => fn(...args)));
+      handlerFn(..._.map(paramGeneratorFns, (fn) => fn(...args)));
     const wsEventEmitter = baseMetadata.eventEmitter ?? defaultWsEventEmitter;
     const wssHandler =
       this.wssHandlers[path] ?? new WssHandler(heartbeat, auth, wsEventEmitter);
@@ -55,16 +55,15 @@ export class WsAdapter {
     wssHandler.setType(type, handler);
     this.wssHandlers[path] = wssHandler;
   }
-
   public handleServerUpgrade() {
-    this.fastify.server.on(
-      "upgrade",
-      (req: IncomingMessage, socket: Duplex, head: Buffer) => {
-        const wssHandler = this.wssHandlers[req.url ?? ""];
-        if (!wssHandler) this.destroySocket(socket, "Path does not exist");
-        else wssHandler.handleServerUpgrade(req, socket, head);
-      }
-    );
+    const handlerFn = this.onServerUgrade.bind(this);
+    this.fastify.server.on("upgrade", handlerFn);
+  }
+
+  private onServerUgrade(req: IncomingMessage, socket: Duplex, head: Buffer) {
+    const wssHandler = this.wssHandlers[req.url ?? ""];
+    if (!wssHandler) this.destroySocket(socket, "Path does not exist");
+    else wssHandler.handleServerUpgrade(req, socket, head);
   }
 
   private destroySocket(socket: Duplex, msg: string) {

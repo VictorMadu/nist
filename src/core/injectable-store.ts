@@ -1,6 +1,6 @@
 import { IInjectableHandler } from "./interface/injectable-handler.interface";
 import InjectableHandler from "./injectable-handler";
-import { Constructor } from "../types";
+import { Constructor } from "ts-types";
 
 // Storing all injectable together and creates a handler for each one of them;
 export class InjectableStore {
