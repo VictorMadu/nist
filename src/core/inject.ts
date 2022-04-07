@@ -1,6 +1,6 @@
 import { inject } from "inversify";
 import "reflect-metadata";
-import { Constructor } from "../types";
+import { Constructor } from "ts-types";
 import { InjectableStore } from "./injectable-store";
 import {
   IIndexOrPropertyDescriptor,

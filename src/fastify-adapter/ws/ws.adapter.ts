@@ -55,7 +55,6 @@ export class WsAdapter {
     wssHandler.setType(type, handler);
     this.wssHandlers[path] = wssHandler;
   }
-
   public handleServerUpgrade() {
     const handlerFn = this.onServerUgrade.bind(this);
     this.fastify.server.on("upgrade", handlerFn);

@@ -53,6 +53,7 @@
     "pino": "^7.6.3",
     "redis": "^4.0.2",
     "reflect-metadata": "^0.1.13",
+    "ts-types": "https://github.com/VictorMadu/ts-types#v0.1.0-alpha",
     "utf-8-validate": "^5.0.8",
     "validator": "^13.7.0",
     "ws": "^8.4.2"

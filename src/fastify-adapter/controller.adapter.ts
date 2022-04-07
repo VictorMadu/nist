@@ -2,7 +2,7 @@ import { FastifyInstance } from "fastify";
 import _ from "lodash";
 import { getAllClassMethodsName } from "../utils";
 import { InjectableStore, InjectableHandler } from "../core";
-import { Constructor } from "../types";
+import { Constructor } from "ts-types";
 import HttpAdapter from "./http/http.adapter";
 import { HttpType, WsType } from "./constants/controller.adapter.constants";
 import {
