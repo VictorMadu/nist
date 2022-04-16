@@ -1,5 +1,5 @@
-export { default as Module } from "./module";
-export { default as Injectable } from "./injectable";
-export { default as Inject } from "./inject";
-export { default as InjectableHandler } from "./injectable-handler";
-export { default as InjectableStore } from "./injectable-store";
+export { InjectableStore } from "./injectable-store";
+export { ControllerAdapter, ControllerInstance } from "./controller-adapter";
+export { ClassMetadata, ClassMetadataImpl } from "./class-metadata";
+export { ServiceAdapter } from "./service-adapter";
+export { Store } from "./store";

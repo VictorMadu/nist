@@ -1,31 +1,31 @@
 import { FastifyInstance } from "fastify";
-import { WebSocketServer } from "ws";
-import { IModuleDeco } from "nist-core/interface/module.interface";
-import ControllerAdapter from "./controller.adapter";
-import { IServiceEventHandler } from "./interfaces/bootstrap.interfaces";
-import ServiceAdapter from "./service.adapter";
-import * as _ from "lodash";
+import { HttpAdapter } from "./http-adapter";
+import { ServiceAdapter } from "../core/service-adapter";
+import { WsAdapter } from "./ws-adapter";
 
-// TODO: Add core as peer dependency becaude of `IModuleDeco`
-export class AppBootstrap {
+export class Bootstrap {
   private serviceAdapter: ServiceAdapter;
-  private controllerAdapter: ControllerAdapter;
-  private wssInstanceObj: Record<string, WebSocketServer> = {};
+  private httpAdapter: HttpAdapter;
+  private wsAdapter: WsAdapter;
 
-  constructor(private fastify: FastifyInstance, appModule: IModuleDeco) {
-    this.serviceAdapter = new ServiceAdapter(fastify);
-    this.controllerAdapter = new ControllerAdapter(fastify);
-    appModule.load(this.serviceAdapter, this.controllerAdapter);
+  constructor(private fastify: FastifyInstance) {
+    this.serviceAdapter = new ServiceAdapter(this.fastify);
+    this.httpAdapter = new HttpAdapter(this.fastify);
+    this.wsAdapter = new WsAdapter(this.fastify);
   }
 
-  public startWs() {
-    const wsAdapter = this.controllerAdapter.getWsAdapter();
-    wsAdapter.handleServerUpgrade();
+  load() {
+    this.serviceAdapter.resolve();
+    this.httpAdapter.resolve();
+    this.wsAdapter.resolve();
+    this.serviceAdapter.ready();
   }
 
-  public getServiceEventHandler(): IServiceEventHandler {
-    return this.serviceAdapter;
+  emitStart() {
+    this.serviceAdapter.start();
+  }
+
+  emitClose() {
+    this.serviceAdapter.close();
   }
 }
-
-export default AppBootstrap;
