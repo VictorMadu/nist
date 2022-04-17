@@ -58,8 +58,8 @@ class HttpAttacher {
   }
 
   private buildRoutePath(methodName: string | symbol) {
-    const basePath = this.getBaseMeta().path ?? "";
-    const methodPath = this.getMethodMeta(methodName).path ?? "";
+    const basePath = this.getBaseMeta().path;
+    const methodPath = this.getMethodMeta(methodName).path;
     return basePath + methodPath || DEFAULT_ROUTE;
   }
 

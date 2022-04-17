@@ -9,28 +9,25 @@ const DEFAULT_HEARTBEAT = 3000; // 3000 milliseconds
 const DEFAULT_AUTH_AND_GET_USER_DETAILS = () => ({});
 const store = InjectableStore.getStore();
 
-export function WsController(config: { type?: string }) {
+export function WsController(type = "") {
   return (Target: Constructor) => {
-    setBaseMeta(Target, config);
+    setBaseMeta(Target, { type });
     return InjectableBase()(Target);
   };
 }
 
 export function setWsConfig(config: Partial<BaseMetadata>, Targets: Constructor[]) {
   _.map(Targets, (Target) => {
-    setBaseMeta(Target, config);
+    setBaseMeta(Target, {
+      path: config.path || DEFAULT_PATH,
+      heartbeat: config.heartbeat || DEFAULT_HEARTBEAT,
+      authAndGetUserDetails: DEFAULT_AUTH_AND_GET_USER_DETAILS,
+    });
   });
 }
 
 const setBaseMeta = (Target: Constructor, config: Partial<BaseMetadata>) => {
-  const baseMeta = store.getWsMetadata(Target).getBaseMeta<Partial<BaseMetadata>>();
   store.getWsMetadata(Target).setBaseMeta({
-    path: (baseMeta.path ?? "") + (config.path ?? "") || DEFAULT_PATH,
-    type: (baseMeta.type ?? "") + (config.type ?? "") || "",
-    heartbeat: config.heartbeat ?? baseMeta.heartbeat ?? DEFAULT_HEARTBEAT,
-    authAndGetUserDetails:
-      config.authAndGetUserDetails ??
-      baseMeta.authAndGetUserDetails ??
-      DEFAULT_AUTH_AND_GET_USER_DETAILS,
+    ...config,
   });
 };

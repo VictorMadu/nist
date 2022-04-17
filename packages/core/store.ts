@@ -10,31 +10,27 @@ export interface Store {
   getServices(): Constructor[];
 }
 
+// TODO: Refactor and make cleaner. Break into ServiceStore, HttpStore, WsStore Classes.
+// TODO: And maybe re-ogranize folder structure and split into service, http and ws
 export class StoreImpl implements Store {
   private services: Constructor[] = [];
   private httpControllersObj = new Map<Constructor, ClassMetadata>();
   private wsControllersObj = new Map<Constructor, ClassMetadata>();
 
   getHttps() {
-    return this.httpControllersObj.keys();
+    return this.getAllTargetsFromStorage(this.httpControllersObj);
   }
 
   getWs() {
-    return this.wsControllersObj.keys();
+    return this.getAllTargetsFromStorage(this.wsControllersObj);
   }
 
   getHttpMetadata(Target: Constructor) {
-    if (this.httpControllersObj.has(Target)) {
-      this.httpControllersObj.set(Target, new ClassMetadataImpl());
-    }
-    return this.httpControllersObj.get(Target) as ClassMetadata;
+    return this.getMetadata(this.httpControllersObj, Target);
   }
 
   getWsMetadata(Target: Constructor) {
-    if (this.wsControllersObj.has(Target)) {
-      this.wsControllersObj.set(Target, new ClassMetadataImpl());
-    }
-    return this.wsControllersObj.get(Target) as ClassMetadata;
+    return this.getMetadata(this.wsControllersObj, Target);
   }
 
   addService(Target: Constructor) {
@@ -44,5 +40,20 @@ export class StoreImpl implements Store {
 
   getServices() {
     return this.services;
+  }
+
+  private getMetadata(storage: Map<Constructor, ClassMetadata>, Target: Constructor) {
+    this.storeTargetIfNotStored(storage, Target);
+    return storage.get(Target) as ClassMetadata;
+  }
+
+  private getAllTargetsFromStorage(storage: Map<Constructor, ClassMetadata>) {
+    return storage.keys();
+  }
+
+  private storeTargetIfNotStored(storage: Map<Constructor, ClassMetadata>, Target: Constructor) {
+    if (!storage.has(Target)) {
+      storage.set(Target, new ClassMetadataImpl());
+    }
   }
 }

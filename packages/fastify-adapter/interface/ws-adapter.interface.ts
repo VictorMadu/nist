@@ -8,7 +8,7 @@ export interface BaseMetadata {
 }
 
 export interface MethodMetadata {
-  type?: string;
+  type: string;
 }
 
 export type ParamMetadata = WsHandler;

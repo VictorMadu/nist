@@ -5,9 +5,9 @@ import { Constructor } from "ts-util-types";
 
 const store = InjectableStore.getStore();
 
-export function HttpController(config: BaseMetadata) {
+export function HttpController(path = "") {
   return (Target: Constructor) => {
-    store.getHttpMetadata(Target).setBaseMeta(config);
+    store.getHttpMetadata(Target).setBaseMeta<BaseMetadata>({ path });
     return InjectableBase()(Target);
   };
 }

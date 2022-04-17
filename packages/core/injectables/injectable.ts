@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import { singleton } from "tsyringe";
 import { InjectableStore } from "../injectable-store";
 import { Constructor } from "ts-util-types";

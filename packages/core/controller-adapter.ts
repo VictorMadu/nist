@@ -9,7 +9,7 @@ export abstract class ControllerAdapter {
   private store = InjectableStore.getStore();
   private container = InjectableStore.getContainer();
 
-  protected abstract attach(httpInstance: ControllerInstance, metadata: ClassMetadata): void;
+  protected abstract attach(controllerInstance: ControllerInstance, metadata: ClassMetadata): void;
   protected abstract getMetadata(store: Store, controllerClass: Constructor): ClassMetadata;
   protected abstract getControllers(store: Store): IterableIterator<Constructor>;
 
@@ -22,8 +22,8 @@ export abstract class ControllerAdapter {
   }
 
   private resolveController(controller: Constructor) {
-    const httpInstance = this.container.resolve(controller) as ControllerInstance;
+    const controllerInstance = this.container.resolve(controller) as ControllerInstance;
     const instanceMetadata = this.getMetadata(this.store, controller);
-    this.attach(httpInstance, instanceMetadata);
+    this.attach(controllerInstance, instanceMetadata);
   }
 }

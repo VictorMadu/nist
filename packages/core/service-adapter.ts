@@ -25,16 +25,16 @@ export class ServiceAdapter {
     _.forEach(serviceClasses, (serviceClass) => this.resolveService(serviceClass));
   }
 
-  ready() {
-    this.emitEvent(this.readyListeners, onReady);
+  async ready() {
+    await this.emitEvent(this.readyListeners, onReady);
   }
 
-  start() {
-    this.emitEvent(this.startListeners, onStart);
+  async start() {
+    await this.emitEvent(this.startListeners, onStart);
   }
 
-  close() {
-    this.emitEvent(this.closeListeners, onClose);
+  async close() {
+    await this.emitEvent(this.closeListeners, onClose);
   }
 
   private resolveService(service: Constructor) {
@@ -57,8 +57,11 @@ export class ServiceAdapter {
     this.registerEventListener(serviceInstance, this.closeListeners, onClose);
   }
 
-  private emitEvent(eventListenersStore: Record<string | symbol, Func>[], type: string) {
-    _.forEach(eventListenersStore, (listener) => listener[type](this.serverInstance));
+  private async emitEvent(eventListenersStore: Record<string | symbol, Func>[], type: string) {
+    for (let i = 0; i < eventListenersStore.length; i++) {
+      const listenerInstance = eventListenersStore[i];
+      await listenerInstance[type](this.serverInstance);
+    }
   }
 
   private registerEventListener(
@@ -66,6 +69,7 @@ export class ServiceAdapter {
     eventListenersStore: Record<string | symbol, Func>[],
     type: string
   ) {
-    if (obj[type]) eventListenersStore.push(obj);
+    const hasMethod = obj[type] as Func | undefined;
+    if (hasMethod) eventListenersStore.push(obj);
   }
 }

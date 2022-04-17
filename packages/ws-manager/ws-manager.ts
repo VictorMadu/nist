@@ -18,18 +18,15 @@ export interface WsServerManager {
   setHandler(type: string, fn: WsHandler): WsServerManager;
 }
 
-export interface WssCtxSetter {
-  setReq(req: IncomingMessage): WssCtxSetter;
-  setSocket(socket: Duplex): WssCtxSetter;
-  setHead(head: Buffer): WssCtxSetter;
-}
-
 export interface WssAction {
+  setReq(req: IncomingMessage): WssAction;
+  setSocket(socket: Duplex): WssAction;
+  setHead(head: Buffer): WssAction;
   start(): void;
   stop(): void;
 }
 
-export interface WsServer extends WsServerManager, WssCtxSetter, WssAction {}
+export interface WsServer extends WsServerManager, WssAction {}
 
 export class WsManagerImpl implements WsManager {
   private wsServerManagers: Record<string, WsServer> = {};
@@ -43,19 +40,25 @@ export class WsManagerImpl implements WsManager {
 
   createWssServerManager(
     path: string,
-    wsServerManagerBuilder: (builder: WsServerManager) => WsServer
+    wsServerManagerBuilder: (builder: WsServerManager) => WsServerManager
   ) {
-    const wsServerManagerInstance = wsServerManagerBuilder(new WsServerManagerImpl(path));
-    wsServerManagerInstance.start();
+    const wsServerManagerInstance = wsServerManagerBuilder(
+      this.getWsServerManager(path)
+    ) as WsServer;
     this.wsServerManagers[path] = wsServerManagerInstance;
 
     return this;
   }
 
+  private getWsServerManager(path: string) {
+    return this.wsServerManagers[path] ?? new WsServerManagerImpl(path);
+  }
+
   private registerServerEvents() {
     this.server.on("upgrade", (req: IncomingMessage, socket: Duplex, head: Buffer) => {
-      this.setWsCtx(req, socket, head);
-      this.handleUpgrade();
+      const serverManager = this.getServerManagerFromReqUrl(req.url);
+      if (!serverManager) return endSocket(this.socket, "HTTP/1.1 400 Invalid path\r\n\r\n");
+      serverManager.setReq(req).setSocket(socket).setHead(head).start();
     });
 
     this.server.on("close", () => {
@@ -70,26 +73,15 @@ export class WsManagerImpl implements WsManager {
     this.head = head;
   }
 
-  private handleUpgrade() {
-    const serverManager = this.getServerManager();
-    if (!serverManager) return endSocket(this.socket, "HTTP/1.1 400 Invalid path\r\n\r\n");
-    serverManager.start();
-  }
-
-  private getServerManager() {
-    const path = this.getPathName();
+  private getServerManagerFromReqUrl(url: string | undefined) {
+    const path = this.getPathNameFromReq(url);
     if (!path) return;
     const serverManager = this.wsServerManagers[path] as WsServer | undefined;
     return serverManager;
   }
 
-  private getPathName() {
-    try {
-      if (!this.req.url) return undefined;
-      return new URL(this.req.url).pathname;
-    } catch (error) {
-      return undefined;
-    }
+  private getPathNameFromReq(url: string | undefined) {
+    return url;
   }
 }
 
@@ -106,7 +98,9 @@ export class WsServerManagerImpl implements WsServer {
   private userDetails: Object | null | undefined = undefined;
   private heartBeatInterval!: NodeJS.Timer;
 
-  constructor(private path: string) {}
+  constructor(private path: string) {
+    this.registerWssConnectionListener();
+  }
 
   setHeartbeat(heartbeat: number): WsServerManager {
     this.heartbeat = heartbeat;
@@ -122,24 +116,35 @@ export class WsServerManagerImpl implements WsServer {
     return this;
   }
 
-  setReq(req: IncomingMessage): WssCtxSetter {
+  setReq(req: IncomingMessage): WssAction {
     this.req = req;
     return this;
   }
-  setSocket(socket: Duplex): WssCtxSetter {
+  setSocket(socket: Duplex): WssAction {
     this.socket = socket;
     return this;
   }
-  setHead(head: Buffer): WssCtxSetter {
+  setHead(head: Buffer): WssAction {
     this.head = head;
     return this;
   }
 
-  async start() {
-    this.userDetails = await this.authAndGetUserDetails(this.req); // TODO: turn to a clas. This does more than one thing
+  start() {
+    this.userDetails = this.authAndGetUserDetails(this.req); // TODO: turn to a clas. This does more than one thing
     if (!this.userDetails) return endSocket(this.socket, "HTTP/1.1 401 Unauthorized\r\n\r\n");
+    this.wss.handleUpgrade(this.req, this.socket, this.head, (ws) => {
+      this.wss.emit("connection", ws, this.req);
+    });
 
-    this.wss.on("connection", async (ws) => {
+    this.startBrokenConnectionDetection();
+  }
+
+  stop() {
+    clearInterval(this.heartBeatInterval);
+  }
+
+  private registerWssConnectionListener() {
+    this.wss.on("connection", (ws) => {
       ws.on("message", (data, isBinary) => {
         const parsedData = this.getParsedData(data);
         const handler = this.getHandler(parsedData.type);
@@ -147,10 +152,6 @@ export class WsServerManagerImpl implements WsServer {
         handler(this.wss, ws, this.req, this.socket, this.head, this.userDetails);
       });
     });
-  }
-
-  stop() {
-    clearInterval(this.heartBeatInterval);
   }
 
   private startBrokenConnectionDetection() {

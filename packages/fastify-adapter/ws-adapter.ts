@@ -9,35 +9,35 @@ import { WsManager, WsManagerImpl } from "../ws-manager";
 import { BaseMetadata, MethodMetadata, ParamMetadata } from "./interface/ws-adapter.interface";
 
 export class WsAdapter extends ControllerAdapter {
-  private wsAttacher: WsAttacher;
+  private wsAttacher!: WsAttacher;
 
-  constructor(fastify: FastifyInstance) {
+  constructor(private fastify: FastifyInstance) {
     super();
-    this.wsAttacher = new WsAttacher(fastify.server);
   }
 
   protected getMetadata(store: Store, controllerClass: Constructor) {
-    return store.getHttpMetadata(controllerClass);
+    return store.getWsMetadata(controllerClass);
   }
   protected getControllers(store: Store) {
-    return store.getHttps();
+    if (!this.wsAttacher) this.wsAttacher = new WsAttacher(this.fastify.server);
+    return store.getWs();
   }
 
   protected attach(wsInstance: ControllerInstance, metadata: ClassMetadata): void {
+    // getControllers will be called before attach
     this.wsAttacher.setWsInstance(wsInstance).setMetadata(metadata);
     _.forEach(metadata.getMethodNames(), (methodName) => this.wsAttacher.attach(methodName));
   }
 }
 
 class WsAttacher {
+  private wsManager = new WsManagerImpl(this.server);
   private wsInstance!: ControllerInstance;
-  private wsManager!: WsManager;
   private metadata!: ClassMetadata;
 
   constructor(private server: Server) {}
 
   setWsInstance(wsInstance: ControllerInstance) {
-    if (!this.wsManager) this.wsManager = new WsManagerImpl(this.server);
     this.wsInstance = wsInstance;
     return this;
   }
@@ -51,19 +51,15 @@ class WsAttacher {
     const baseMeta = this.getBaseMeta();
     const methodMeta = this.getMethodMeta(methodName);
     const methodParamFns = this.getMethodParamFns(methodName);
-
-    const subType = methodMeta.type || "";
-    const type = baseMeta.type + subType;
+    const type = baseMeta.type + methodMeta.type;
 
     this.wsManager.createWssServerManager(baseMeta.path, (builder) => {
-      builder
+      return builder
         .setHeartbeat(baseMeta.heartbeat)
         .setAuthAndGetUserDetails(baseMeta.authAndGetUserDetails)
         .setHandler(type, (...args) => {
           this.wsInstance[methodName](_.map(methodParamFns, (fn) => fn(...args)));
         });
-
-      return builder;
     });
   }
 

@@ -13,7 +13,7 @@ export type ReqRepLifeCycle =
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "OPTIONS";
 
 export type BaseMetadata = {
-  path?: string;
+  path: string;
 };
 
 export type MethodMetadata = {
@@ -27,7 +27,7 @@ export type MethodMetadata = {
     headers?: Record<string, any>;
     response?: Record<string, any>;
   };
-  path?: string;
+  path: string;
 };
 
 export type ParamMetadata = (req: FastifyRequest, rep: FastifyReply) => any;

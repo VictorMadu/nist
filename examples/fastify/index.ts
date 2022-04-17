@@ -1,34 +1,30 @@
-import Fastify, {
-  FastifyInstance,
-  FastifyReply,
-  FastifyRequest,
-} from "fastify";
+import Fastify, { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import * as fs from "fs";
 import * as path from "path";
 import * as yaml from "js-yaml";
 import * as _ from "lodash";
 import corsPlugin from "fastify-cors";
-import { Injectable, Inject, Module } from "nist-core";
-import {
-  AppBootstrap,
-  HttpController,
-  WsController,
-  HttpMethodDecos,
-  HttpParamDecos,
-  WsMethodDecos,
-  WsParamDecos,
-  ICloseListener,
-  IReadyListener,
-  IStartListener,
-  ISend,
-} from "nist-fastify-adapter";
 import { WebSocket } from "ws";
+import { Injectable, Inject } from "nist-core/injectables";
+import { Bootstrap } from "nist-fastify-adapter";
+import { HttpController } from "nist-fastify-adapter/injectables/http-controller";
+import { WsController, setWsConfig } from "nist-fastify-adapter/injectables/ws-controller";
+import * as HttpMethods from "nist-fastify-adapter/injectables/http.method.decorators";
+import * as HttpParams from "nist-fastify-adapter/injectables/http.param.decorators";
+import * as WsMethods from "nist-fastify-adapter/injectables/ws.method.decorators";
+import * as WsParams from "nist-fastify-adapter/injectables/ws.param.decorators";
+import {
+  ReadyListener,
+  StartListener,
+  CloseListener,
+} from "nist-fastify-adapter/interface/listener.interface";
+import {
+  SendRawFn,
+  SendFn,
+} from "nist-fastify-adapter/injectables/interface/ws.param.decorator.interface";
 
 const configFile = fs.readFileSync(
-  path.join(
-    process.cwd(),
-    process.env.NODE_ENV === "test" ? "config.test.yaml" : "config.yaml"
-  ),
+  path.join(process.cwd(), process.env.NODE_ENV === "test" ? "config.test.yaml" : "config.yaml"),
   { encoding: "utf-8" }
 );
 
@@ -41,6 +37,8 @@ const fastify = Fastify({
   // },
   logger: true,
 });
+
+const bootstrap = new Bootstrap(fastify);
 
 fastify.ready(() => {
   console.log("\nPrinting the plugins");
@@ -58,7 +56,7 @@ fastify.ready(() => {
 });
 
 @Injectable()
-class ServiceOne implements IReadyListener, IStartListener, ICloseListener {
+class ServiceOne implements ReadyListener, StartListener, CloseListener {
   private foo = "foo";
 
   onReady(fastify: FastifyInstance) {
@@ -82,17 +80,14 @@ class ServiceOne implements IReadyListener, IStartListener, ICloseListener {
 class User {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
 
-  @HttpMethodDecos.OnRequest([
+  @HttpMethods.OnRequest([
     async (req: FastifyRequest, rep: FastifyReply) => {
       rep.header("Access-Control-Allow-Origin", "*");
-      rep.header(
-        "Access-Control-Allow-Methods",
-        "OPTIONS, GET, POST, PUT, PATCH, DELETE"
-      );
+      rep.header("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, PATCH, DELETE");
       rep.header("Access-Control-Max-Age", "300");
     },
   ])
-  @HttpMethodDecos.QueryStringSchema({
+  @HttpMethods.QueryStringSchema({
     type: "object",
     properties: {
       f: { type: "number" },
@@ -100,15 +95,13 @@ class User {
     required: ["f"],
     additionalProperties: false,
   } as const)
-  @HttpMethodDecos.Get()
+  @HttpMethods.Get()
   getText(
-    @HttpParamDecos.Params() params: FastifyRequest["params"],
-    @HttpParamDecos.Rep() rep: FastifyReply,
-    @HttpParamDecos.RepData() repData: { f: string }
+    @HttpParams.Params() params: FastifyRequest["params"],
+    @HttpParams.Rep() rep: FastifyReply,
+    @HttpParams.RepData() repData: { f: string }
   ) {
-    rep
-      .code(200)
-      .send("with path '/' " + this.serviceOne.callMe() + " " + repData);
+    rep.code(200).send("with path '/' " + this.serviceOne.callMe() + " " + repData);
   }
 }
 
@@ -116,14 +109,9 @@ class User {
 class Feed {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
 
-  @HttpMethodDecos.Post()
-  getText(
-    @HttpParamDecos.Body() body: FastifyRequest["body"],
-    @HttpParamDecos.Rep() rep: FastifyReply
-  ) {
-    rep
-      .code(200)
-      .send("with path '/feed' " + this.serviceOne.callMe() + " " + rep);
+  @HttpMethods.Post()
+  getText(@HttpParams.Body() body: FastifyRequest["body"], @HttpParams.Rep() rep: FastifyReply) {
+    rep.code(200).send("with path '/feed' " + this.serviceOne.callMe() + " " + rep);
   }
 }
 
@@ -131,32 +119,31 @@ class Feed {
 class Cat {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
 
-  @HttpMethodDecos.Put()
+  @HttpMethods.Put()
   getText(
-    @HttpParamDecos.Body() body: FastifyRequest["body"],
-    @HttpParamDecos.Rep() rep: FastifyReply,
-    @HttpParamDecos.Req() req: FastifyRequest
+    @HttpParams.Body() body: FastifyRequest["body"],
+    @HttpParams.Rep() rep: FastifyReply,
+    @HttpParams.Req() req: FastifyRequest
   ) {
-    rep
-      .code(200)
-      .send("with path '/feed' " + this.serviceOne.callMe() + " " + rep);
+    rep.code(200).send("with path '/feed' " + this.serviceOne.callMe() + " " + rep);
+  }
+
+  @HttpMethods.Put("/list")
+  getTexts(
+    @HttpParams.Body() body: FastifyRequest["body"],
+    @HttpParams.Rep() rep: FastifyReply,
+    @HttpParams.Req() req: FastifyRequest
+  ) {
+    rep.code(200).send("with path '/feed' " + this.serviceOne.callMe() + " " + rep);
   }
 }
 
-@WsController({
-  path: "/cats",
-  type: "cat",
-  auth: () => true,
-  heartbeat: 4000,
-})
-class CatWatcher {
+@WsController()
+class CatWs {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
 
-  @WsMethodDecos.Type(":change")
-  handleCatChange(
-    @WsParamDecos.Data() data: any,
-    @WsParamDecos.Ws() ws: WebSocket
-  ) {
+  @WsMethods.Type(":change")
+  handleCatChange(@WsParams.Data() data: any, @WsParams.Ws() ws: WebSocket) {
     console.log("cat watcher data", data);
     ws.send(
       JSON.stringify({
@@ -166,11 +153,12 @@ class CatWatcher {
     );
   }
 
-  @WsMethodDecos.Type(":change2")
+  @WsMethods.Type(":change2")
   handleCatChange2(
-    @WsParamDecos.Data() data: any,
-    @WsParamDecos.Ws() ws: WebSocket,
-    @WsParamDecos.Send() send: ISend
+    @WsParams.Data() data: any,
+    @WsParams.Ws() ws: WebSocket,
+    @WsParams.Send() send: SendFn,
+    @WsParams.SendRaw() sendRaw: SendRawFn
   ) {
     console.log("cat watcher data", data);
     const filePath = _.get(yamlLoadedConfigFile, "app.filePath") as string;
@@ -178,44 +166,25 @@ class CatWatcher {
 
     source.on("data", (chunk) => {
       console.log("emitted data", chunk?.constructor);
-      send({ type: "buffer:chunk", data: chunk }, true);
+      sendRaw(chunk);
     });
 
     source.on("close", () => {
       console.log("emitted finished");
-      send({ type: "finished", data: null }, true);
+      send("finished", "ended");
     });
   }
 }
 
-@Module({
-  imports: [],
-  controllers: [Cat, CatWatcher],
-  services: [ServiceOne],
-  exports: [ServiceOne],
-})
-class CatModule {}
-
-@Module({
-  imports: [CatModule],
-  controllers: [User, Feed],
-  services: [],
-  exports: [],
-})
-class UserModule {}
-
-@Module({
-  imports: [CatModule, UserModule],
-  controllers: [],
-  services: [],
-  exports: [],
-})
-class AppModule {}
-
-const appBootstrapper = new AppBootstrap(fastify, new AppModule() as any);
-const serviceEventHandler = appBootstrapper.getServiceEventHandler();
-appBootstrapper.startWs();
-serviceEventHandler.emitReady();
+setWsConfig(
+  {
+    path: "/cats",
+    type: "cat",
+    authAndGetUserDetails: () => ({}),
+    heartbeat: 4000,
+  },
+  [CatWs]
+);
 
 // TODO: Add cors for specific controllers. Create the function
 fastify.register(corsPlugin, {
@@ -227,13 +196,14 @@ fastify.register(corsPlugin, {
   },
 });
 
+bootstrap.load();
 fastify.listen(8080, "127.0.0.1", (err, address) => {
   if (err) {
     console.error(err);
     process.exit(1);
   }
-  serviceEventHandler.emitStart();
+  bootstrap.emitStart();
   console.log("Server listening at", address);
 });
 
-fastify.addHook("onClose", () => serviceEventHandler.emitClose());
+fastify.addHook("onClose", () => bootstrap.emitClose());

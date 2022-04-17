@@ -1,8 +1,11 @@
 import { IncomingMessage } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { Duplex } from "stream";
+import { AndWithPromise } from "ts-util-types";
 
-export type AuthAndGetUserDetails = (req: IncomingMessage) => Promise<Object | null | undefined>;
+export type AuthAndGetUserDetails = (
+  req: IncomingMessage
+) => AndWithPromise<Object | null | undefined>;
 
 export type WsHandler = (
   wss: WebSocketServer,

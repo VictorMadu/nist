@@ -13,6 +13,7 @@
   "dependencies": {
     "@types/lodash": "^4.14.181",
     "lodash": "^4.17.21",
+    "reflect-metadata": "^0.1.13",
     "tsyringe": "^4.6.0"
   },
   "devDependencies": {
