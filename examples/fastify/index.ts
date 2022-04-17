@@ -96,7 +96,7 @@ class User {
     additionalProperties: false,
   } as const)
   @HttpMethods.Get()
-  getText(
+  getUser(
     @HttpParams.Params() params: FastifyRequest["params"],
     @HttpParams.Rep() rep: FastifyReply,
     @HttpParams.RepData() repData: { f: string }
@@ -109,9 +109,16 @@ class User {
 class Feed {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
 
-  @HttpMethods.Post()
-  getText(@HttpParams.Body() body: FastifyRequest["body"], @HttpParams.Rep() rep: FastifyReply) {
-    rep.code(200).send("with path '/feed' " + this.serviceOne.callMe() + " " + rep);
+  @HttpMethods.Post("/:id")
+  getFeed(
+    @HttpParams.Body() body: FastifyRequest["body"],
+    @HttpParams.Rep() rep: FastifyReply,
+    @HttpParams.Params() params: any
+  ) {
+    console.log("/feed", params);
+    rep
+      .code(200)
+      .send("with path '/feed' " + this.serviceOne.callMe() + " " + JSON.stringify(body));
   }
 }
 
@@ -120,21 +127,23 @@ class Cat {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
 
   @HttpMethods.Put()
-  getText(
+  getCat(
     @HttpParams.Body() body: FastifyRequest["body"],
     @HttpParams.Rep() rep: FastifyReply,
     @HttpParams.Req() req: FastifyRequest
   ) {
-    rep.code(200).send("with path '/feed' " + this.serviceOne.callMe() + " " + rep);
+    console.log("put cat body", body);
+    rep.code(200).send("with path '/cat' " + this.serviceOne.callMe() + " " + rep);
   }
 
   @HttpMethods.Put("/list")
-  getTexts(
+  getCats(
     @HttpParams.Body() body: FastifyRequest["body"],
     @HttpParams.Rep() rep: FastifyReply,
     @HttpParams.Req() req: FastifyRequest
   ) {
-    rep.code(200).send("with path '/feed' " + this.serviceOne.callMe() + " " + rep);
+    console.log("cat body", body);
+    rep.code(200).send("with path '/list' " + this.serviceOne.callMe() + " " + rep);
   }
 }
 
@@ -153,14 +162,17 @@ class CatWs {
     );
   }
 
-  @WsMethods.Type(":change2")
+  @WsMethods.Type("")
   handleCatChange2(
     @WsParams.Data() data: any,
     @WsParams.Ws() ws: WebSocket,
     @WsParams.Send() send: SendFn,
     @WsParams.SendRaw() sendRaw: SendRawFn
   ) {
-    console.log("cat watcher data", data);
+    console.log("cat watcher data");
+    console.log("typeof ws", typeof ws);
+    console.log("typeof send", typeof send);
+    console.log("typeof sendRaw", typeof sendRaw);
     const filePath = _.get(yamlLoadedConfigFile, "app.filePath") as string;
     const source = fs.createReadStream(filePath);
 

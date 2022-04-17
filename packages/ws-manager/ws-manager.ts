@@ -67,12 +67,6 @@ export class WsManagerImpl implements WsManager {
     });
   }
 
-  private setWsCtx(req: IncomingMessage, socket: Duplex, head: Buffer) {
-    this.req = req;
-    this.socket = socket;
-    this.head = head;
-  }
-
   private getServerManagerFromReqUrl(url: string | undefined) {
     const path = this.getPathNameFromReq(url);
     if (!path) return;
@@ -146,9 +140,14 @@ export class WsServerManagerImpl implements WsServer {
   private registerWssConnectionListener() {
     this.wss.on("connection", (ws) => {
       ws.on("message", (data, isBinary) => {
+        console.log("passed1");
         const parsedData = this.getParsedData(data);
+        console.log("passed2");
+        console.log(parsedData);
         const handler = this.getHandler(parsedData.type);
+        console.log("passed3");
         if (!handler) return;
+        console.log("passed4");
         handler(this.wss, ws, this.req, this.socket, this.head, this.userDetails);
       });
     });
@@ -169,6 +168,7 @@ export class WsServerManagerImpl implements WsServer {
   }
 
   private getParsedData(data: RawData): { type: string; data: any } {
+    console.log("passed", typeof data);
     try {
       if (typeof data === "string") return this.parseStrData(data);
       return this.parseBufferData(data);

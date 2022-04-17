@@ -52,6 +52,7 @@ class WsAttacher {
     const methodMeta = this.getMethodMeta(methodName);
     const methodParamFns = this.getMethodParamFns(methodName);
     const type = baseMeta.type + methodMeta.type;
+    console.log("wsMeta", methodName, type);
 
     this.wsManager.createWssServerManager(baseMeta.path, (builder) => {
       return builder

@@ -11,12 +11,14 @@ const store = InjectableStore.getStore();
 
 export function WsController(type = "") {
   return (Target: Constructor) => {
+    console.log("called WsController");
     setBaseMeta(Target, { type });
     return InjectableBase()(Target);
   };
 }
 
 export function setWsConfig(config: Partial<BaseMetadata>, Targets: Constructor[]) {
+  console.log("called setWsConfig");
   _.map(Targets, (Target) => {
     setBaseMeta(Target, {
       path: config.path || DEFAULT_PATH,
@@ -27,7 +29,10 @@ export function setWsConfig(config: Partial<BaseMetadata>, Targets: Constructor[
 }
 
 const setBaseMeta = (Target: Constructor, config: Partial<BaseMetadata>) => {
-  store.getWsMetadata(Target).setBaseMeta({
+  const wsMetadata = store.getWsMetadata(Target);
+  const baseMeta = wsMetadata.getBaseMeta<BaseMetadata>();
+  wsMetadata.setBaseMeta({
+    ...baseMeta,
     ...config,
   });
 };

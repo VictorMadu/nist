@@ -9,11 +9,8 @@ import { BaseMetadata, MethodMetadata, ParamMetadata } from "./interface/http-ad
 const DEFAULT_ROUTE = "/";
 
 export class HttpAdapter extends ControllerAdapter {
-  private httpAttacher: HttpAttacher;
-
-  constructor(fastify: FastifyInstance) {
+  constructor(private fastify: FastifyInstance) {
     super();
-    this.httpAttacher = new HttpAttacher(fastify);
   }
 
   protected getMetadata(store: Store, controllerClass: Constructor) {
@@ -24,54 +21,40 @@ export class HttpAdapter extends ControllerAdapter {
   }
 
   protected attach(httpInstance: ControllerInstance, metadata: ClassMetadata): void {
-    this.httpAttacher.setHttpInstance(httpInstance).setMetadata(metadata);
-    _.forEach(metadata.getMethodNames(), (methodName) => this.httpAttacher.attach(methodName));
-  }
-}
-
-class HttpAttacher {
-  private httpInstance!: ControllerInstance;
-  private metadata!: ClassMetadata;
-
-  constructor(private fastify: FastifyInstance) {}
-
-  setHttpInstance(httpInstance: ControllerInstance) {
-    this.httpInstance = httpInstance;
-    return this;
-  }
-
-  setMetadata(metadata: ClassMetadata) {
-    this.metadata = metadata;
-    return this;
-  }
-
-  attach(methodName: string | symbol) {
-    const methodMeta = this.getMethodMeta(methodName);
-    const methodParamFns = this.getMethodParamFns(methodName);
-
-    this.fastify.route({
-      ...methodMeta,
-      handler: (req: FastifyRequest, rep: FastifyReply) =>
-        this.httpInstance[methodName](..._.map(methodParamFns, (paramFn) => paramFn(req, rep))),
-      url: this.buildRoutePath(methodName),
+    const attacherHelper = new RouteAttachHelper(httpInstance, metadata);
+    _.forEach(metadata.getMethodNames(), (methodName) => {
+      this.fastify.route({
+        ...attacherHelper.getMethodMeta(methodName),
+        handler: attacherHelper.getHandler(methodName),
+        url: attacherHelper.getRoute(methodName),
+      });
     });
   }
+}
+class RouteAttachHelper {
+  constructor(private httpInstance: ControllerInstance, private metadata: ClassMetadata) {}
 
-  private buildRoutePath(methodName: string | symbol) {
+  getHandler(methodName: string | symbol) {
+    const methodParamFns = this.getMethodParams(methodName);
+    return (req: FastifyRequest, rep: FastifyReply) =>
+      this.httpInstance[methodName](..._.map(methodParamFns, (paramFn) => paramFn(req, rep)));
+  }
+
+  getRoute(methodName: string | symbol) {
     const basePath = this.getBaseMeta().path;
     const methodPath = this.getMethodMeta(methodName).path;
     return basePath + methodPath || DEFAULT_ROUTE;
+  }
+
+  getMethodMeta(methodName: string | symbol) {
+    return this.metadata.getMethodMeta<MethodMetadata>(methodName);
   }
 
   private getBaseMeta() {
     return this.metadata.getBaseMeta<BaseMetadata>();
   }
 
-  private getMethodMeta(methodName: string | symbol) {
-    return this.metadata.getMethodMeta<MethodMetadata>(methodName);
-  }
-
-  private getMethodParamFns(methodName: string | symbol) {
+  private getMethodParams(methodName: string | symbol) {
     return this.metadata.getParamMeta<ParamMetadata[]>(methodName);
   }
 }
