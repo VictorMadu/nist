@@ -22,7 +22,8 @@ export class HttpAdapter extends ControllerAdapter {
 
   protected attach(httpInstance: ControllerInstance, metadata: ClassMetadata): void {
     const attacherHelper = new RouteAttachHelper(httpInstance, metadata);
-    _.forEach(metadata.getMethodNames(), (methodName) => {
+
+    _.forEach(attacherHelper.getMethodNames(), (methodName) => {
       this.fastify.route({
         ...attacherHelper.getMethodMeta(methodName),
         handler: attacherHelper.getHandler(methodName),
@@ -33,6 +34,10 @@ export class HttpAdapter extends ControllerAdapter {
 }
 class RouteAttachHelper {
   constructor(private httpInstance: ControllerInstance, private metadata: ClassMetadata) {}
+
+  getMethodNames() {
+    return this.metadata.getMethodNames();
+  }
 
   getHandler(methodName: string | symbol) {
     const methodParamFns = this.getMethodParams(methodName);

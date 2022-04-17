@@ -169,10 +169,6 @@ class CatWs {
     @WsParams.Send() send: SendFn,
     @WsParams.SendRaw() sendRaw: SendRawFn
   ) {
-    console.log("cat watcher data");
-    console.log("typeof ws", typeof ws);
-    console.log("typeof send", typeof send);
-    console.log("typeof sendRaw", typeof sendRaw);
     const filePath = _.get(yamlLoadedConfigFile, "app.filePath") as string;
     const source = fs.createReadStream(filePath);
 
