@@ -11,19 +11,17 @@ const store = InjectableStore.getStore();
 
 export function WsController(type = "") {
   return (Target: Constructor) => {
-    console.log("called WsController");
     setBaseMeta(Target, { type });
     return InjectableBase()(Target);
   };
 }
 
 export function setWsConfig(config: Partial<BaseMetadata>, Targets: Constructor[]) {
-  console.log("called setWsConfig");
   _.map(Targets, (Target) => {
     setBaseMeta(Target, {
       path: config.path || DEFAULT_PATH,
       heartbeat: config.heartbeat || DEFAULT_HEARTBEAT,
-      authAndGetUserDetails: DEFAULT_AUTH_AND_GET_USER_DETAILS,
+      authAndGetUserDetails: config.authAndGetUserDetails || DEFAULT_AUTH_AND_GET_USER_DETAILS,
     });
   });
 }

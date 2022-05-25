@@ -11,16 +11,16 @@ const getMetadataFn = (Target: Constructor) => store.getWsMetadata(Target);
 const setter = new ParamMetadataSetter(getMetadataFn);
 
 export function Wss() {
-  return setter.set<ParamMetadata>((wss, ws, req, socket, head, payload) => wss);
+  return setter.set<ParamMetadata>((wss, ws, req, socket, head, data) => wss);
 }
 
 export function Ws() {
-  return setter.set<ParamMetadata>((wss, ws, req, socket, head, payload) => ws);
+  return setter.set<ParamMetadata>((wss, ws, req, socket, head, data) => ws);
 }
 
 export function Send() {
   return setter.set<ParamMetadata>(
-    (wss, ws, req, socket, head, payload): SendFn => {
+    (wss, ws, req, socket, head, data): SendFn => {
       return (type: string, data: any) => ws.send(JSON.stringify({ type, data }));
     }
   );
@@ -28,36 +28,34 @@ export function Send() {
 
 export function SendRaw() {
   return setter.set<ParamMetadata>(
-    (wss, ws, req, socket, head, payload): SendRawFn => {
+    (wss, ws, req, socket, head, data): SendRawFn => {
       return (data: RawData | string) => ws.send(data);
     }
   );
 }
 
-export function Data() {
-  return setter.set<ParamMetadata>((wss, ws, req, socket, head, payload) => payload.data);
+export function UserData() {
+  return setter.set<ParamMetadata>((wss, ws, req, socket, head, data) => data.userData);
 }
 
-export function Type() {
-  return setter.set<ParamMetadata>((wss, ws, req, socket, head, payload) => payload.type);
+export function Payload() {
+  return setter.set<ParamMetadata>((wss, ws, req, socket, head, data) => data.payload);
 }
 
 export function Req() {
-  return setter.set<ParamMetadata>((wss, ws, req, socket, head, payload) => req);
+  return setter.set<ParamMetadata>((wss, ws, req, socket, head, data) => req);
 }
 
 export function Url() {
-  return setter.set<ParamMetadata>((wss, ws, req, socket, head, payload) => req.url);
+  return setter.set<ParamMetadata>((wss, ws, req, socket, head, data) => req.url);
 }
 
 export function Ip() {
-  return setter.set<ParamMetadata>(
-    (wss, ws, req, socket, head, payload) => req.socket.remoteAddress
-  );
+  return setter.set<ParamMetadata>((wss, ws, req, socket, head, data) => req.socket.remoteAddress);
 }
 
 export function IpXForwardedFor() {
-  return setter.set<ParamMetadata>((wss, ws, req, socket, head, payload) =>
+  return setter.set<ParamMetadata>((wss, ws, req, socket, head, data) =>
     // TODO: WARNING: req.headers["x-forwarded-for"] may be of type string[]. Look into this
     (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0].trim()
   );

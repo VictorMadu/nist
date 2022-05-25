@@ -1,6 +1,6 @@
 import { IncomingMessage, Server } from "http";
 import { AuthAndGetUserDetails, WsHandler } from "./interface";
-import { WebSocketServer, RawData } from "ws";
+import { WebSocketServer, RawData, WebSocket } from "ws";
 import { Duplex } from "stream";
 import * as _ from "lodash";
 import { endSocket } from "./_utils";
@@ -34,9 +34,7 @@ export class WsManagerImpl implements WsManager {
   private socket!: Duplex;
   private head!: Buffer;
 
-  constructor(private server: Server) {
-    this.registerServerEvents();
-  }
+  constructor(private server: Server) {}
 
   createWssServerManager(
     path: string,
@@ -46,7 +44,7 @@ export class WsManagerImpl implements WsManager {
       this.getWsServerManager(path)
     ) as WsServer;
     this.wsServerManagers[path] = wsServerManagerInstance;
-
+    this.registerServerEvents();
     return this;
   }
 
@@ -123,8 +121,8 @@ export class WsServerManagerImpl implements WsServer {
     return this;
   }
 
-  start() {
-    this.userDetails = this.authAndGetUserDetails(this.req); // TODO: turn to a clas. This does more than one thing
+  async start() {
+    this.userDetails = await this.authAndGetUserDetails(this.req); // TODO: turn to a clas. This does more than one thing
     if (!this.userDetails) return endSocket(this.socket, "HTTP/1.1 401 Unauthorized\r\n\r\n");
     this.wss.handleUpgrade(this.req, this.socket, this.head, (ws) => {
       this.wss.emit("connection", ws, this.req);
@@ -139,16 +137,16 @@ export class WsServerManagerImpl implements WsServer {
 
   private registerWssConnectionListener() {
     this.wss.on("connection", (ws) => {
+      this.setWsLife(ws);
+      ws.on("pong", () => this.setWsLife(ws));
       ws.on("message", (data, isBinary) => {
-        console.log("passed1");
         const parsedData = this.getParsedData(data);
-        console.log("passed2");
-        console.log(parsedData);
         const handler = this.getHandler(parsedData.type);
-        console.log("passed3");
         if (!handler) return;
-        console.log("passed4");
-        handler(this.wss, ws, this.req, this.socket, this.head, this.userDetails);
+        handler(this.wss, ws, this.req, this.socket, this.head, {
+          userData: this.userDetails as Object,
+          payload: parsedData.data,
+        });
       });
     });
   }
@@ -157,7 +155,7 @@ export class WsServerManagerImpl implements WsServer {
     this.heartBeatInterval = setInterval(() => {
       this.wss.clients.forEach((ws) => {
         if ((ws as any).isAlive === false) return ws.terminate();
-        (ws as any).isAlive = false;
+        this.setWsLife(ws, false);
         ws.ping();
       });
     }, this.heartbeat);
@@ -167,8 +165,11 @@ export class WsServerManagerImpl implements WsServer {
     return this.handlers[type];
   }
 
+  private setWsLife(ws: WebSocket, isAlive = true) {
+    (ws as any).isAlive = isAlive;
+  }
+
   private getParsedData(data: RawData): { type: string; data: any } {
-    console.log("passed", typeof data);
     try {
       if (typeof data === "string") return this.parseStrData(data);
       return this.parseBufferData(data);
@@ -186,6 +187,10 @@ export class WsServerManagerImpl implements WsServer {
   }
 
   private parseBufferData(data: Buffer | ArrayBuffer | Buffer[]) {
-    return { type: DEFAULT_TYPE, data };
+    try {
+      return this.parseStrData(data.toString());
+    } catch (error) {
+      return { type: DEFAULT_TYPE, data };
+    }
   }
 }

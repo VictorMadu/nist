@@ -13,5 +13,8 @@ export type WsHandler = (
   req: IncomingMessage,
   socket: Duplex,
   head: Buffer,
-  payload: any
+  data: {
+    userData: Object;
+    payload: any;
+  }
 ) => any;

@@ -14,18 +14,18 @@ export class Bootstrap {
     this.wsAdapter = new WsAdapter(this.fastify);
   }
 
-  load() {
+  async load() {
     this.serviceAdapter.resolve();
     this.httpAdapter.resolve();
     this.wsAdapter.resolve();
-    this.serviceAdapter.ready();
+    await this.serviceAdapter.ready();
   }
 
-  emitStart() {
-    this.serviceAdapter.start();
+  async emitStart() {
+    await this.serviceAdapter.start();
   }
 
-  emitClose() {
-    this.serviceAdapter.close();
+  async emitClose() {
+    await this.serviceAdapter.close();
   }
 }

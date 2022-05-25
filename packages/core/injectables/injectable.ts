@@ -1,17 +1,18 @@
 import "reflect-metadata";
-import { singleton } from "tsyringe";
+import { injectable, singleton } from "tsyringe";
 import { InjectableStore } from "../injectable-store";
 import { Constructor } from "ts-util-types";
 
 const store = InjectableStore.getStore();
 
-export function InjectableBase() {
-  return singleton();
+export function InjectableBase(isSingleton = true) {
+  if (isSingleton) return singleton();
+  return injectable();
 }
 
-export function Injectable() {
+export function Injectable(isSingleton = true) {
   return (Target: Constructor) => {
     store.addService(Target);
-    return InjectableBase()(Target);
+    return InjectableBase(isSingleton)(Target);
   };
 }

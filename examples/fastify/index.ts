@@ -107,7 +107,7 @@ class User {
 
 @HttpController("/feed")
 class Feed {
-  constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
+  constructor(private serviceOne: ServiceOne) {}
 
   @HttpMethods.Post("/:id")
   getFeed(
@@ -152,7 +152,7 @@ class CatWs {
   constructor(@Inject(ServiceOne) private serviceOne: ServiceOne) {}
 
   @WsMethods.Type(":change")
-  handleCatChange(@WsParams.Data() data: any, @WsParams.Ws() ws: WebSocket) {
+  handleCatChange(@WsParams.Payload() data: any, @WsParams.Ws() ws: WebSocket) {
     console.log("cat watcher data", data);
     ws.send(
       JSON.stringify({
@@ -164,7 +164,7 @@ class CatWs {
 
   @WsMethods.Type("")
   handleCatChange2(
-    @WsParams.Data() data: any,
+    @WsParams.Payload() data: any,
     @WsParams.Ws() ws: WebSocket,
     @WsParams.Send() send: SendFn,
     @WsParams.SendRaw() sendRaw: SendRawFn
