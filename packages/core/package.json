@@ -1,0 +1,22 @@
+{
+  "name": "nist-core",
+  "license": "MIT",
+  "version": "0.1.0-alpha",
+  "author": "Madu Victor Ebube",
+  "scripts": {
+    "build": "rimraf ./dist && tsc -p tsconfig.json",
+    "test": "jest",
+    "test:watch": "jest --watchAll",
+    "test:cov": "jest --coverage",
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand"
+  },
+  "dependencies": {
+    "@types/lodash": "^4.14.181",
+    "lodash": "^4.17.21",
+    "reflect-metadata": "^0.1.13",
+    "tsyringe": "^4.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.24"
+  }
+}
