@@ -1,10 +1,10 @@
-import Fastify, { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import * as fs from "fs";
 import * as path from "path";
 import * as yaml from "js-yaml";
-import * as _ from "lodash";
+import Fastify, { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import corsPlugin from "fastify-cors";
 import { WebSocket } from "ws";
+import * as _ from "lodash";
 import { Injectable, Inject } from "nist-core/injectables";
 import { Bootstrap } from "nist-fastify-adapter";
 import { HttpController } from "nist-fastify-adapter/injectables/http-controller";
