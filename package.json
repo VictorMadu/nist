@@ -1,8 +1,18 @@
 {
   "name": "root",
-  "private": true,
   "devDependencies": {
+    "@types/jest": "^28.1.4",
     "@types/lodash": "^4.14.181",
-    "lerna": "^4.0.0"
+    "jest": "^28.1.2",
+    "lerna": "^5.1.8",
+    "ts-jest": "^28.0.5"
+  },
+  "scripts": {
+    "build": "lerna run build",
+    "test": "lerna run test",
+    "test:watch": "lerna run test:watch",
+    "test:cov": "lerna run test:cov",
+    "test:debug": "lerna run test:debug",
+    "diff": "lerna diff"
   }
 }

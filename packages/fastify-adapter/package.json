@@ -1,7 +1,7 @@
 {
-  "name": "nist-adapter",
+  "name": "@victormadu-nist/fastify-adapter",
   "license": "MIT",
-  "version": "0.1.0-alpha",
+  "version": "1.0.0-alpha.0",
   "author": "Madu Victor Ebube",
   "scripts": {
     "build": "rimraf ./dist && tsc -p tsconfig.json",
@@ -17,8 +17,11 @@
     "ws": "^8.5.0"
   },
   "devDependencies": {
+    "@types/jest": "^28.1.4",
     "@types/lodash": "^4.14.181",
     "@types/node": "^17.0.24",
-    "@types/ws": "^8.5.3"
+    "@types/ws": "^8.5.3",
+    "jest": "^28.1.2",
+    "ts-jest": "^28.0.5"
   }
 }
