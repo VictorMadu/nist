@@ -1,8 +1,9 @@
 {
   "name": "victormadu-nist-fastify-adapter",
   "license": "MIT",
-  "version": "1.0.0-alpha.0",
+  "version": "1.2.0-alpha.0",
   "author": "Madu Victor Ebube",
+  "main": "./dist/index.js",
   "scripts": {
     "build": "rimraf ./dist && tsc -p tsconfig.json",
     "pub": "yarn build && yarn publish",
