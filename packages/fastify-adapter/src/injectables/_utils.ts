@@ -1,5 +1,5 @@
 import { InnerKeys, InnerValue, Constructor, Func } from "ts-util-types";
-import { ClassMetadata } from "nist-core/class-metadata";
+import { ClassMetadata } from "victormadu-nist-core";
 
 export type GetMetadataFn = (Target: Constructor<any, any[]>) => ClassMetadata;
 
