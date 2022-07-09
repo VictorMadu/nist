@@ -32,6 +32,6 @@
     "ts-jest": "^28.0.5",
     "ts-util-types": "^0.3.0-alpha",
     "typescript": "^4.6.2",
-    "victormadu-nist-core": "^1.0.0-alpha.0"
+    "victormadu-nist-core": "^1.1.0-alpha.0"
   }
 }

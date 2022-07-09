@@ -2419,10 +2419,10 @@ v8-to-istanbul@^9.0.1:
     "@types/istanbul-lib-coverage" "^2.0.1"
     convert-source-map "^1.6.0"
 
-victormadu-nist-core@^1.0.0-alpha.0:
-  version "1.0.0-alpha.0"
-  resolved "https://registry.yarnpkg.com/victormadu-nist-core/-/victormadu-nist-core-1.0.0-alpha.0.tgz#76d46fc2b6abd0cbf0f3b4bef8843a3cb62a6feb"
-  integrity sha512-8uuNnkWi2klnllvhiJLNPTao3eRLfG/Zf7MvJJKEuGpSRIhBb2TMh+8n/z6RPbgutsvw2M59cwmpMAFJFpud6Q==
+victormadu-nist-core@^1.1.0-alpha.0:
+  version "1.1.0-alpha.0"
+  resolved "https://registry.yarnpkg.com/victormadu-nist-core/-/victormadu-nist-core-1.1.0-alpha.0.tgz#dadfe64dac5085072f4112fee0d9b67f8215272b"
+  integrity sha512-1QB+eF6zdODsIBRWSWY5GnDU/UgHQ2+tcrvsoiOM7npUZKTCSu9oUDotnayq53dmKFs3m0hjTj1Y8BC+ySMcww==
   dependencies:
     "@types/lodash" "^4.14.181"
     lodash "^4.17.21"
