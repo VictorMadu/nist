@@ -1,11 +1,12 @@
 {
   "name": "victormadu-nist-core",
   "license": "MIT",
-  "version": "1.0.0-alpha.0",
+  "version": "1.0.1-alpha.0",
   "author": "Madu Victor Ebube",
   "main": "dist/index.js",
   "scripts": {
     "build": "rimraf ./dist && tsc -p tsconfig.json",
+    "pub": "yarn build && yarn publish",
     "test": "jest",
     "test:watch": "jest --watchAll",
     "test:cov": "jest --coverage",
