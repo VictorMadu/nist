@@ -11,8 +11,8 @@ export interface ClassMetadata {
   getBaseMeta<T extends BaseMeta>(): T;
   setMethodMeta<R extends MethodMeta, K extends InnerKeys<R>>(
     methodName: string | symbol,
-    key: K,
-    value: InnerValue<R, K>
+    key: InnerKeys<R>,
+    value: InnerValue<R, InnerKeys<R>>
   ): ClassMetadata;
   getMethodMeta<R extends MethodMeta>(methodName: string | symbol): R;
   setParamMeta<R extends ParamMeta>(
