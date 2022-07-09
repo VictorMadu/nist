@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { HttpAdapter } from "./http-adapter";
-import { ServiceAdapter } from "../core/service-adapter";
+import { ServiceAdapter } from "victormadu-nist-core";
 import { WsAdapter } from "./ws-adapter";
 
 export class Bootstrap {
