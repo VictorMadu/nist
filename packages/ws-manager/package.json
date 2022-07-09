@@ -1,7 +1,7 @@
 {
   "name": "victormadu-nist-ws-manager",
   "license": "MIT",
-  "version": "1.0.0-alpha.0",
+  "version": "1.1.0-alpha.0",
   "author": "Madu Victor Ebube",
   "main": "./dist/index.js",
   "scripts": {
