@@ -1,3 +1,5 @@
+import "reflect-metadata";
+export { InjectableBase, Injectable, Inject, InjectDelay } from "./injectables";
 export { InjectableStore } from "./injectable-store";
 export { ServiceAdapter } from "./service-adapter";
 export { ClassMetadata, ClassMetadataImpl } from "./class-metadata";
