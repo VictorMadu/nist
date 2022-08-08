@@ -5,6 +5,3 @@ It’s a framework that encapsulates web frameworks just like Nest JS does, to w
 You can check how to use with fastify [here](examples/fastify).
 
 This framework is used in [brate-server](https://github.com/VictorMadu/brate-server)
-
-Sadly I am considering abandoning this project because this cannot be used in production and It is complicated, disorganized and needs an entire restructure and better documentation and I dont have time for it.
-
